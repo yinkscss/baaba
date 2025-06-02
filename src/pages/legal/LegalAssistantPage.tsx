@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Bot, User, Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { FaqSection } from '../../components/ui/faq-section';
 import { PlaceholdersAndVanishInput } from '../../components/ui/placeholders-and-vanish-input';
+import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage, ChatBubbleAction, ChatBubbleActionWrapper } from '../../components/ui/chat-bubble';
 
 type Message = {
   id: string;
@@ -128,74 +129,57 @@ const LegalAssistantPage: React.FC = () => {
         {/* Chat Container */}
         <div className="mb-6 h-96 overflow-y-auto rounded-md border border-nav bg-card p-4">
           <div className="space-y-4">
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`flex max-w-[80%] items-start space-x-2 rounded-lg p-3 ${
-                  message.type === 'user' 
-                    ? 'bg-accent-blue text-background' 
-                    : 'bg-nav text-text-primary'
-                }`}>
-                  {message.type === 'ai' && (
-                    <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent-blue">
-                      <Bot size={14} className="text-background" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p>{message.content}</p>
-                    <div className="mt-2 flex justify-end space-x-1">
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChatBubble variant={message.type === 'user' ? 'sent' : 'received'}>
+                    <ChatBubbleAvatar
+                      src={message.type === 'user' 
+                        ? "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                        : "https://images.pexels.com/photos/1082962/pexels-photo-1082962.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                      }
+                      fallback={message.type === 'user' ? 'US' : 'AI'}
+                    />
+                    <div className="flex-1">
+                      <ChatBubbleMessage variant={message.type === 'user' ? 'sent' : 'received'}>
+                        {message.content}
+                      </ChatBubbleMessage>
                       {message.type === 'ai' && (
-                        <>
-                          <button 
+                        <ChatBubbleActionWrapper>
+                          <ChatBubbleAction
+                            icon={<Copy size={14} />}
                             onClick={() => copyToClipboard(message.content)}
-                            className="rounded p-1 text-text-muted hover:bg-card hover:text-text-primary"
-                            title="Copy to clipboard"
-                          >
-                            <Copy size={14} />
-                          </button>
-                          <button 
-                            className="rounded p-1 text-text-muted hover:bg-card hover:text-text-primary"
-                            title="Helpful"
-                          >
-                            <ThumbsUp size={14} />
-                          </button>
-                          <button 
-                            className="rounded p-1 text-text-muted hover:bg-card hover:text-text-primary"
-                            title="Not helpful"
-                          >
-                            <ThumbsDown size={14} />
-                          </button>
-                        </>
+                          />
+                          <ChatBubbleAction
+                            icon={<ThumbsUp size={14} />}
+                            onClick={() => console.log('Helpful')}
+                          />
+                          <ChatBubbleAction
+                            icon={<ThumbsDown size={14} />}
+                            onClick={() => console.log('Not helpful')}
+                          />
+                        </ChatBubbleActionWrapper>
                       )}
                     </div>
-                  </div>
-                  {message.type === 'user' && (
-                    <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-background">
-                      <User size={14} className="text-accent-blue" />
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                  </ChatBubble>
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex max-w-[80%] items-center space-x-2 rounded-lg bg-nav p-4 text-text-primary">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-blue">
-                    <Bot size={14} className="text-background" />
-                  </div>
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-text-secondary"></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-text-secondary" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-text-secondary" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                </div>
-              </div>
+              <ChatBubble variant="received">
+                <ChatBubbleAvatar
+                  src="https://images.pexels.com/photos/1082962/pexels-photo-1082962.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                  fallback="AI"
+                />
+                <ChatBubbleMessage isLoading />
+              </ChatBubble>
             )}
           </div>
         </div>
