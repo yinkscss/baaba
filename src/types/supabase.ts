@@ -13,23 +13,35 @@ export interface Database {
         Row: {
           id: string
           email: string
+          role: string
           first_name: string
           last_name: string
+          phone_number: string | null
+          profile_image: string | null
           created_at: string
+          verified: boolean
         }
         Insert: {
           id?: string
           email: string
+          role: string
           first_name: string
           last_name: string
+          phone_number?: string | null
+          profile_image?: string | null
           created_at?: string
+          verified?: boolean
         }
         Update: {
           id?: string
           email?: string
+          role?: string
           first_name?: string
           last_name?: string
+          phone_number?: string | null
+          profile_image?: string | null
           created_at?: string
+          verified?: boolean
         }
       }
       properties: {
