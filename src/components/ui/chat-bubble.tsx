@@ -20,7 +20,7 @@ export function ChatBubble({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 mb-4",
+        "flex items-start gap-3 mb-6",
         variant === "sent" && "flex-row-reverse",
         className,
       )}
@@ -46,8 +46,14 @@ export function ChatBubbleMessage({
   return (
     <div
       className={cn(
-        "rounded-lg p-3",
-        variant === "sent" ? "bg-accent-blue text-background" : "bg-nav",
+        "relative rounded-2xl px-4 py-3 shadow-lg transition-all duration-200",
+        variant === "sent" 
+          ? "bg-gradient-to-br from-accent-blue to-accent-blue/90 text-background" 
+          : "bg-gradient-to-br from-nav/90 to-nav backdrop-blur-sm",
+        "after:absolute after:bottom-0 after:h-4 after:w-4",
+        variant === "sent"
+          ? "after:right-[-8px] after:rounded-bl-xl after:bg-accent-blue"
+          : "after:left-[-8px] after:rounded-br-xl after:bg-nav",
         className
       )}
     >
@@ -74,7 +80,7 @@ export function ChatBubbleAvatar({
   className,
 }: ChatBubbleAvatarProps) {
   return (
-    <Avatar className={cn("h-8 w-8", className)}>
+    <Avatar className={cn("h-8 w-8 ring-2 ring-nav ring-offset-2 ring-offset-background", className)}>
       {src && <AvatarImage src={src} />}
       <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
@@ -96,7 +102,10 @@ export function ChatBubbleAction({
     <Button
       variant="ghost"
       size="sm"
-      className={cn("h-6 w-6 p-0", className)}
+      className={cn(
+        "h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity",
+        className
+      )}
       onClick={onClick}
     >
       {icon}
@@ -112,7 +121,7 @@ export function ChatBubbleActionWrapper({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn("flex items-center gap-1 mt-2", className)}>
+    <div className={cn("flex items-center gap-1 mt-2 pl-1", className)}>
       {children}
     </div>
   )
