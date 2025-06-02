@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
@@ -34,6 +34,16 @@ const LegalAssistantPage: React.FC = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, isLoading]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +144,7 @@ const LegalAssistantPage: React.FC = () => {
         />
 
         {/* Chat Container */}
-        <div className="mb-6 h-96 overflow-y-auto rounded-md border border-nav bg-card p-4">
+        <div ref={chatContainerRef} className="mb-6 h-96 overflow-y-auto rounded-md border border-nav bg-card p-4">
           <div className="space-y-4">
             <AnimatePresence>
               {messages.map((message) => (
