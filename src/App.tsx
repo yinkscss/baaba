@@ -5,11 +5,13 @@ import { useAuth } from './context/AuthContext';
 // Layouts
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
+import DashboardLayout from './layouts/DashboardLayout';
 
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import OnboardingPage from './pages/OnboardingPage';
 import PropertyListingsPage from './pages/properties/PropertyListingsPage';
 import PropertyDetailPage from './pages/properties/PropertyDetailPage';
 import RoommateLandingPage from './pages/roommates/RoommateLandingPage';
@@ -18,7 +20,6 @@ import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Dashboard Pages
-import DashboardLayout from './layouts/DashboardLayout';
 import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
@@ -59,6 +60,7 @@ function App() {
       {/* Public routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/properties" element={<PropertyListingsPage />} />
         <Route path="/properties/:id" element={<PropertyDetailPage />} />
         <Route path="/roommate-matching" element={<RoommateLandingPage />} />
