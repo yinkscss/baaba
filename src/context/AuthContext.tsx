@@ -77,24 +77,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      // Sign up without email confirmation
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: role
+          }
+        }
+      });
       
       if (error) throw error;
       
       if (data.user) {
         // Create user record in the users table
-        const { error: profileError } = await supabase.from('users').insert([
-          {
-            id: data.user.id,
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            role,
-            created_at: new Date().toISOString()
-          },
-        ]);
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: data.user.id,
+              email,
+              first_name: firstName,
+              last_name: lastName,
+              role,
+              created_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
         
         if (profileError) throw profileError;
+
+        // Set the user immediately since email confirmation is disabled
+        setUser({
+          id: data.user.id,
+          email,
+          firstName,
+          lastName,
+          role
+        });
       }
     } catch (error) {
       console.error('Sign up error:', error);
