@@ -6,7 +6,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -21,10 +21,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        setUser({
-          id: data.session.user.id,
-          email: data.session.user.email!
-        });
+        // Fetch additional user data from your users table
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single();
+        
+        if (!error && userData) {
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.first_name,
+            lastName: userData.last_name
+          });
+        }
       }
       setLoading(false);
     };
@@ -35,10 +46,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!
-          });
+          // Fetch user data
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (!error && userData) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              firstName: userData.first_name,
+              lastName: userData.last_name
+            });
+          }
         } else {
           setUser(null);
         }
@@ -51,10 +73,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      
       if (error) throw error;
+      
+      if (data.user) {
+        // Create user record in the users table
+        const { error: profileError } = await supabase.from('users').insert([
+          {
+            id: data.user.id,
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            created_at: new Date().toISOString()
+          },
+        ]);
+        
+        if (profileError) throw profileError;
+      }
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
