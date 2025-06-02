@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { User, UserRole } from '../types';
+import type { User } from '../types';
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -33,8 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userData.id,
             email: userData.email,
             firstName: userData.first_name,
-            lastName: userData.last_name,
-            role: userData.role as UserRole
+            lastName: userData.last_name
           });
         }
       }
@@ -59,8 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: userData.id,
               email: userData.email,
               firstName: userData.first_name,
-              lastName: userData.last_name,
-              role: userData.role as UserRole
+              lastName: userData.last_name
             });
           }
         } else {
@@ -75,51 +73,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      // Sign up without email confirmation
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: role
-          }
-        }
-      });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       
       if (error) throw error;
       
       if (data.user) {
         // Create user record in the users table
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email,
-              first_name: firstName,
-              last_name: lastName,
-              role,
-              created_at: new Date().toISOString()
-            }
-          ])
-          .select()
-          .single();
+        const { error: profileError } = await supabase.from('users').insert([
+          {
+            id: data.user.id,
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            created_at: new Date().toISOString()
+          },
+        ]);
         
         if (profileError) throw profileError;
-
-        // Set the user immediately since email confirmation is disabled
-        setUser({
-          id: data.user.id,
-          email,
-          firstName,
-          lastName,
-          role
-        });
       }
     } catch (error) {
       console.error('Sign up error:', error);

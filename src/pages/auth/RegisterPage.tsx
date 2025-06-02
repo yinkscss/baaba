@@ -14,11 +14,10 @@ const RegisterPage: React.FC = () => {
       await signUp(
         data.email,
         data.password,
+        'tenant',
         data.firstName,
-        data.lastName,
-        'tenant' // Default role for new users
+        data.lastName
       );
-      navigate('/'); // Redirect to home page after successful registration
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
       console.error(err);

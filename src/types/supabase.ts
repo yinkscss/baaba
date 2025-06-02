@@ -15,7 +15,6 @@ export interface Database {
           email: string
           first_name: string
           last_name: string
-          role: string
           created_at: string
         }
         Insert: {
@@ -23,7 +22,6 @@ export interface Database {
           email: string
           first_name: string
           last_name: string
-          role: string
           created_at?: string
         }
         Update: {
@@ -31,7 +29,6 @@ export interface Database {
           email?: string
           first_name?: string
           last_name?: string
-          role?: string
           created_at?: string
         }
       }
