@@ -64,7 +64,7 @@ const RoommateLandingPage: React.FC = () => {
             <div className="relative z-10">
               <BlurFade delay={0.25} inView>
                 <h1 className="text-4xl font-bold text-text-primary md:text-6xl">
-                  Find Your Ideal Roommate Instantly
+                  Find Your Ideal Roommate
                 </h1>
               </BlurFade>
               
