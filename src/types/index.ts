@@ -3,13 +3,6 @@ export type UserRole = 'tenant' | 'landlord';
 export interface User {
   id: string;
   email: string;
-  role: UserRole;
-  firstName: string;
-  lastName: string;
-  phoneNumber?: string;
-  profileImage?: string;
-  createdAt: string;
-  verified: boolean;
 }
 
 export interface Property {
