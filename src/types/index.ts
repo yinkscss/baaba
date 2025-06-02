@@ -4,7 +4,6 @@ export type User = {
   role: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string | null;
   profileImage?: string | null;
   createdAt: string;
 };

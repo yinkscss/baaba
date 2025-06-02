@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch additional user data from your profiles table
         const { data: userData, error } = await supabase
           .from('users')
-          .select('id, email, role, first_name, last_name, phone_number, profile_image, created_at')
+          .select('id, email, role, first_name, last_name, profile_image, created_at')
           .eq('id', data.session.user.id)
           .single();
         
@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: userData.role,
             firstName: userData.first_name,
             lastName: userData.last_name,
-            phoneNumber: userData.phone_number,
             profileImage: userData.profile_image,
             createdAt: userData.created_at
           });
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch user profile data
           const { data: userData, error } = await supabase
             .from('users')
-            .select('id, email, role, first_name, last_name, phone_number, profile_image, created_at')
+            .select('id, email, role, first_name, last_name, profile_image, created_at')
             .eq('id', session.user.id)
             .single();
           
@@ -64,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: userData.role,
               firstName: userData.first_name,
               lastName: userData.last_name,
-              phoneNumber: userData.phone_number,
               profileImage: userData.profile_image,
               createdAt: userData.created_at
             });
@@ -91,7 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'User already registered') {
+          throw new Error('This email is already registered. Please try logging in or use a different email address.');
+        }
+        throw error;
+      }
       
       if (data.user) {
         // Create user profile in the users table

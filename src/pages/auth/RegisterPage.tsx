@@ -18,6 +18,7 @@ const RegisterPage: React.FC = () => {
         data.firstName,
         data.lastName
       );
+      navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
       console.error(err);
