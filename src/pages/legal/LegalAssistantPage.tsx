@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { FaqSection } from '../../components/ui/faq-section';
 import { PlaceholdersAndVanishInput } from '../../components/ui/placeholders-and-vanish-input';
 import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage, ChatBubbleAction, ChatBubbleActionWrapper } from '../../components/ui/chat-bubble';
+import { TextShimmer } from '../../components/ui/text-shimmer';
 
 type Message = {
   id: string;
@@ -107,7 +108,13 @@ const LegalAssistantPage: React.FC = () => {
     <div className="container mx-auto px-4 pb-12 pt-24">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 text-center">
-          <h1 className="mb-4 text-3xl font-bold text-text-primary md:text-4xl">AI Legal Assistant</h1>
+          <TextShimmer
+            as="h1"
+            duration={2}
+            className="mb-4 text-3xl font-bold md:text-4xl [--base-color:theme(colors.accent-blue)] [--base-gradient-color:theme(colors.accent-green)]"
+          >
+            AI Legal Assistant
+          </TextShimmer>
           <p className="text-text-secondary">
             Get expert advice on Nigerian tenancy law and resolve housing disputes with our AI legal assistant.
           </p>
