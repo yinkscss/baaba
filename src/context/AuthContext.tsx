@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch additional user data from your profiles table
         const { data: userData, error } = await supabase
           .from('users')
-          .select('*')
+          .select('id, email, role, first_name, last_name, phone_number, profile_image, created_at')
           .eq('id', data.session.user.id)
           .single();
         
@@ -37,8 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastName: userData.last_name,
             phoneNumber: userData.phone_number,
             profileImage: userData.profile_image,
-            createdAt: userData.created_at,
-            verified: userData.verified
+            createdAt: userData.created_at
           });
         }
       }
@@ -54,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch user profile data
           const { data: userData, error } = await supabase
             .from('users')
-            .select('*')
+            .select('id, email, role, first_name, last_name, phone_number, profile_image, created_at')
             .eq('id', session.user.id)
             .single();
           
@@ -67,8 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               lastName: userData.last_name,
               phoneNumber: userData.phone_number,
               profileImage: userData.profile_image,
-              createdAt: userData.created_at,
-              verified: userData.verified
+              createdAt: userData.created_at
             });
           }
         } else {
@@ -104,8 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role,
             first_name: firstName,
             last_name: lastName,
-            created_at: new Date().toISOString(),
-            verified: false,
+            created_at: new Date().toISOString()
           },
         ]);
         
