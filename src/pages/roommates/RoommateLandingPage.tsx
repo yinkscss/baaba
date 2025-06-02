@@ -58,7 +58,7 @@ const RoommateLandingPage: React.FC = () => {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
       {/* Hero Section */}
-      <section className="relative min-h-screen py-24 md:py-32">
+      <section className="relative min-h-screen py-32 md:py-40">
         <div className="container mx-auto px-4">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="relative z-10">
