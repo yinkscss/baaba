@@ -19,28 +19,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active session
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Fetch additional user data from your profiles table
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('id, email, role, first_name, last_name, profile_image, created_at')
-          .eq('id', data.session.user.id)
-          .single();
-        
-        if (!error && userData) {
-          setUser({
-            id: userData.id,
-            email: userData.email,
-            role: userData.role,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            profileImage: userData.profile_image,
-            createdAt: userData.created_at
-          });
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (sessionData.session) {
+          // Fetch additional user data from your profiles table
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('id, email, role, first_name, last_name, created_at')
+            .eq('id', sessionData.session.user.id)
+            .single();
+          
+          if (userError) throw userError;
+          
+          if (userData) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              role: userData.role,
+              firstName: userData.first_name,
+              lastName: userData.last_name,
+              createdAt: userData.created_at
+            });
+          }
         }
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getSession();
@@ -48,29 +57,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Subscribe to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session) {
-          // Fetch user profile data
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('id, email, role, first_name, last_name, profile_image, created_at')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (!error && userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              role: userData.role,
-              firstName: userData.first_name,
-              lastName: userData.last_name,
-              profileImage: userData.profile_image,
-              createdAt: userData.created_at
-            });
+        try {
+          if (session) {
+            // Fetch user profile data
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('id, email, role, first_name, last_name, created_at')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (userError) throw userError;
+            
+            if (userData) {
+              setUser({
+                id: userData.id,
+                email: userData.email,
+                role: userData.role,
+                firstName: userData.first_name,
+                lastName: userData.last_name,
+                createdAt: userData.created_at
+              });
+            }
+          } else {
+            setUser(null);
           }
-        } else {
+        } catch (error) {
+          console.error('Error in auth state change:', error);
           setUser(null);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
@@ -87,14 +103,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName: string
   ) => {
     try {
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        throw new Error('This email is already registered. Please try logging in or use a different email address.');
+      }
+
       const { data, error } = await supabase.auth.signUp({ email, password });
       
-      if (error) {
-        if (error.message === 'User already registered') {
-          throw new Error('This email is already registered. Please try logging in or use a different email address.');
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       if (data.user) {
         // Create user profile in the users table
@@ -120,7 +142,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Invalid email or password. Please try again.');
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
