@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { User } from '../types';
+import type { User, UserRole } from '../types';
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userData.id,
             email: userData.email,
             firstName: userData.first_name,
-            lastName: userData.last_name
+            lastName: userData.last_name,
+            role: userData.role as UserRole
           });
         }
       }
@@ -58,7 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: userData.id,
               email: userData.email,
               firstName: userData.first_name,
-              lastName: userData.last_name
+              lastName: userData.last_name,
+              role: userData.role as UserRole
             });
           }
         } else {
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email,
             first_name: firstName,
             last_name: lastName,
+            role,
             created_at: new Date().toISOString()
           },
         ]);
