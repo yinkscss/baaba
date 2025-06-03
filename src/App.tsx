@@ -21,6 +21,9 @@ import NotFoundPage from './pages/NotFoundPage';
 
 // Dashboard Pages
 import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
+import TenantPropertiesPage from './pages/dashboard/tenant/TenantPropertiesPage';
+import TenantRoommateMatchingPage from './pages/dashboard/tenant/TenantRoommateMatchingPage';
+import TenantLegalAssistantPage from './pages/dashboard/tenant/TenantLegalAssistantPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
@@ -100,6 +103,30 @@ function App() {
           element={
             <ProtectedRoute requiredRole="tenant">
               <TenantDashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/properties" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantPropertiesPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/roommate-matching" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantRoommateMatchingPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/legal-assistant" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantLegalAssistantPage />
             </ProtectedRoute>
           } 
         />
