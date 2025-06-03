@@ -46,7 +46,7 @@ const TenantDashboardPage: React.FC = () => {
             Here's what's happening with your housing search
           </p>
         </div>
-        <Button onClick={() => navigate('/properties')}>
+        <Button onClick={() => navigate('/dashboard/tenant/properties')}>
           <Search size={16} className="mr-2" />
           Find Properties
         </Button>
@@ -118,15 +118,27 @@ const TenantDashboardPage: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Button variant="outline" className="w-full" onClick={() => navigate('/roommate-matching')}>
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => navigate('/dashboard/tenant/roommate-matching')}
+        >
           <Users size={16} className="mr-2" />
           Find Roommates
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => navigate('/legal-assistant')}>
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => navigate('/dashboard/tenant/legal-assistant')}
+        >
           <FileText size={16} className="mr-2" />
           Legal Assistant
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => navigate('/subscription')}>
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => navigate('/subscription')}
+        >
           <Star size={16} className="mr-2" />
           Upgrade Plan
         </Button>
