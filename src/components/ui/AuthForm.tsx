@@ -116,7 +116,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
                 {mode === 'login' ? (
                   <>
                     Don't have an account?{' '}
-                    <Link to="/register" className="text-accent-blue hover:text-accent-blue/80">
+                    <Link to="/register\" className="text-accent-blue hover:text-accent-blue/80">
                       Sign up, it's free!
                     </Link>
                   </>
