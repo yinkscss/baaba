@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Users, BriefcaseBusiness, ArrowRight } from 'lucide-react';
+import { Building, Users, Briefcase as BriefcaseBusiness, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import Button from '../components/ui/Button';
