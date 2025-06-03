@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import Button from '../ui/Button';
 import { useNotifications } from '../../hooks/useDashboard';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '../../lib/utils';
 
 interface NotificationsListProps {
   userId: string;
