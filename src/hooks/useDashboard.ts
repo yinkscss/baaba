@@ -3,19 +3,47 @@ import { supabase } from '../lib/supabase';
 import type { DashboardStats, Notification, Activity } from '../types/dashboard';
 
 export function useDashboardStats(userId: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['dashboardStats', userId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('dashboard_stats')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      // If no stats exist yet, create default stats
+      if (!data) {
+        const defaultStats: Omit<DashboardStats, 'id'> = {
+          user_id: userId,
+          properties_viewed: 0,
+          saved_properties: 0,
+          active_applications: 0,
+          total_properties: 0,
+          total_income: 0,
+          occupancy_rate: 0,
+          last_updated: new Date().toISOString()
+        };
+
+        const { data: newStats, error: insertError } = await supabase
+          .from('dashboard_stats')
+          .insert(defaultStats)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return newStats as DashboardStats;
+      }
+
       return data as DashboardStats;
     }
   });
+
+  return query;
 }
 
 export function useNotifications(userId: string) {
