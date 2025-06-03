@@ -7,14 +7,15 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (data: any) => {
     try {
       setError(null);
+      setIsLoading(true);
       await signUp(
         data.email,
         data.password,
-        'tenant',
         data.firstName,
         data.lastName
       );
@@ -22,6 +23,8 @@ const RegisterPage: React.FC = () => {
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
       console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -30,6 +33,7 @@ const RegisterPage: React.FC = () => {
       mode="register"
       onAuthSubmit={handleSubmit}
       error={error}
+      isLoading={isLoading}
     />
   );
 };
