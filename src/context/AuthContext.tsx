@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           if (event === 'SIGNED_OUT') {
             setUser(null);
-            setLoading(false);
             return;
           }
 
@@ -93,8 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error('Error in auth state change:', error);
           setUser(null);
-        } finally {
-          setLoading(false);
         }
       }
     );
@@ -105,17 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message === 'Invalid login credentials') {
-          throw new Error('Invalid email or password. Please try again.');
-        }
-        throw error;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.message === 'Invalid login credentials') {
+        throw new Error('Invalid email or password. Please try again.');
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   };
@@ -126,84 +117,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstName: string,
     lastName: string
   ) => {
-    try {
-      setLoading(true);
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .single();
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-      if (existingUser) {
-        throw new Error('This email is already registered. Please try logging in or use a different email address.');
-      }
+    if (existingUser) {
+      throw new Error('This email is already registered. Please try logging in or use a different email address.');
+    }
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    
+    if (error) throw error;
+    
+    if (data.user) {
+      const { error: profileError } = await supabase.from('users').insert([
+        {
+          id: data.user.id,
+          email,
+          role: 'pending',
+          first_name: firstName,
+          last_name: lastName,
+          created_at: new Date().toISOString(),
+          verified: false
+        },
+      ]);
       
-      if (error) throw error;
-      
-      if (data.user) {
-        const { error: profileError } = await supabase.from('users').insert([
-          {
-            id: data.user.id,
-            email,
-            role: 'pending',
-            first_name: firstName,
-            last_name: lastName,
-            created_at: new Date().toISOString(),
-            verified: false
-          },
-        ]);
-        
-        if (profileError) throw profileError;
-      }
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw error;
+      if (profileError) throw profileError;
     }
   };
 
   const signOut = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setUser(null);
   };
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('users')
-        .update({ role: newRole })
-        .eq('id', userId)
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('users')
+      .update({ role: newRole })
+      .eq('id', userId)
+      .select()
+      .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      if (data) {
-        setUser({
-          id: data.id,
-          email: data.email,
-          role: data.role,
-          firstName: data.first_name,
-          lastName: data.last_name,
-          phoneNumber: data.phone_number,
-          profileImage: data.profile_image,
-          createdAt: data.created_at,
-          verified: data.verified
-        });
-      }
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      throw error;
-    } finally {
-      setLoading(false);
+    if (data) {
+      setUser({
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        phoneNumber: data.phone_number,
+        profileImage: data.profile_image,
+        createdAt: data.created_at,
+        verified: data.verified
+      });
     }
   };
 
