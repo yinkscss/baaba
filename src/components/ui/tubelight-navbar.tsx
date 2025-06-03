@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { DivideIcon as LucideIcon, LogIn } from "lucide-react"
+import { DivideIcon as LucideIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
-import Button from "../ui/Button"
+import { useAuth } from "../../context/AuthContext"
 
 interface NavItem {
   name: string
@@ -19,6 +19,7 @@ interface NavBarProps {
 export function NavBar({ items, className }: NavBarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(items.find(item => item.url === location.pathname)?.name || items[0].name);
   const [isMobile, setIsMobile] = useState(false)
 
@@ -82,17 +83,6 @@ export function NavBar({ items, className }: NavBarProps) {
             )
           })}
         </div>
-
-        {/* Sign In Icon */}
-        <Button
-          variant="primary"
-          size="icon"
-          className="hidden md:flex items-center justify-center ml-2 h-9 w-9"
-          onClick={() => navigate('/login')}
-          title="Sign In"
-        >
-          <LogIn size={16} />
-        </Button>
       </div>
     </div>
   )
