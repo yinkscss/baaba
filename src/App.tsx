@@ -22,6 +22,7 @@ import NotFoundPage from './pages/NotFoundPage';
 // Dashboard Pages
 import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
+import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' | 'agent' }) {
@@ -59,15 +60,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
 }
 
 function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   return (
     <Routes>
@@ -117,6 +110,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="landlord">
               <LandlordDashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/agent" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <AgentDashboardPage />
             </ProtectedRoute>
           } 
         />
