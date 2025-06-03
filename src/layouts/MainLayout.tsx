@@ -3,13 +3,16 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar } from '../components/ui/tubelight-navbar';
 import { StackedCircularFooter } from '../components/ui/stacked-circular-footer';
+import { StickySignIn } from '../components/ui/sticky-signin';
 import { RoommateIcon } from '../components/icons/RoommateIcon';
 import { HomeIcon } from '../components/icons/HomeIcon';
 import { BuildingIcon } from '../components/icons/BuildingIcon';
 import { LegalIcon } from '../components/icons/LegalIcon';
+import { useAuth } from '../context/AuthContext';
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const isRoommatePage = location.pathname === '/roommate-matching';
 
   const navItems = [
@@ -24,6 +27,7 @@ const MainLayout: React.FC = () => {
       isRoommatePage ? 'bg-black' : ''
     }`}>
       <NavBar items={navItems} />
+      {!user && <StickySignIn />}
       <main className={`flex-1 ${isRoommatePage ? '' : 'pt-16 md:pt-20'}`}>
         <AnimatePresence mode="wait">
           <motion.div
