@@ -59,6 +59,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
+          if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+
           if (session) {
             const { data: userData, error: userError } = await supabase
               .from('users')
@@ -111,8 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -156,8 +160,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -166,12 +168,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
