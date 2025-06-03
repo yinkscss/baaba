@@ -5,42 +5,15 @@ import { Building, Users, CreditCard, TrendingUp, Plus, Bell, Settings } from 'l
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
+import { DashboardCard } from '../../../components/dashboard/DashboardCard';
+import { NotificationsList } from '../../../components/dashboard/NotificationsList';
+import { useDashboardStats } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
-
-// Mock data for the dashboard
-const MOCK_STATS = {
-  totalProperties: 5,
-  activeListings: 3,
-  totalIncome: 2500000,
-  occupancyRate: 80,
-  pendingApplications: 8,
-  totalTenants: 12
-};
-
-const MOCK_RECENT_ACTIVITIES = [
-  {
-    id: '1',
-    type: 'application',
-    message: 'New tenant application for Yaba Apartment',
-    timestamp: '2 hours ago'
-  },
-  {
-    id: '2',
-    type: 'payment',
-    message: 'Rent payment received from John Doe',
-    timestamp: '5 hours ago'
-  },
-  {
-    id: '3',
-    type: 'maintenance',
-    message: 'Maintenance request: Plumbing issue at Lekki House',
-    timestamp: '1 day ago'
-  }
-];
 
 const LandlordDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: stats, isLoading } = useDashboardStats(user?.id || '');
 
   return (
     <div className="space-y-6">
@@ -68,73 +41,29 @@ const LandlordDashboardPage: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="border border-nav">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">
-                Total Properties
-              </CardTitle>
-              <Building className="h-4 w-4 text-accent-blue" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-text-primary">{MOCK_STATS.totalProperties}</div>
-              <p className="text-xs text-text-secondary">
-                {MOCK_STATS.activeListings} active listings
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <DashboardCard
+          title="Total Properties"
+          value={stats?.totalProperties || 0}
+          icon={<Building className="h-4 w-4" />}
+          description={`${stats?.activeApplications || 0} active listings`}
+        />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <Card className="border border-nav">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">
-                Monthly Income
-              </CardTitle>
-              <CreditCard className="h-4 w-4 text-accent-green" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-text-primary">
-                {formatCurrency(MOCK_STATS.totalIncome)}
-              </div>
-              <p className="text-xs text-text-secondary">
-                From {MOCK_STATS.totalTenants} tenants
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <DashboardCard
+          title="Monthly Income"
+          value={formatCurrency(stats?.totalIncome || 0)}
+          icon={<CreditCard className="h-4 w-4" />}
+          description={`From ${stats?.activeApplications || 0} tenants`}
+        />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <Card className="border border-nav">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">
-                Occupancy Rate
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-accent-blue" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-text-primary">{MOCK_STATS.occupancyRate}%</div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-nav">
-                <div 
-                  className="h-full bg-accent-blue transition-all duration-500"
-                  style={{ width: `${MOCK_STATS.occupancyRate}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <DashboardCard
+          title="Occupancy Rate"
+          value={`${stats?.occupancyRate || 0}%`}
+          icon={<TrendingUp className="h-4 w-4" />}
+          trend={{
+            value: 5,
+            isPositive: true
+          }}
+        />
       </div>
 
       {/* Main Content Grid */}
@@ -146,7 +75,26 @@ const LandlordDashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {MOCK_RECENT_ACTIVITIES.map(activity => (
+              {[
+                {
+                  id: '1',
+                  type: 'application',
+                  message: 'New tenant application for Yaba Apartment',
+                  timestamp: '2 hours ago'
+                },
+                {
+                  id: '2',
+                  type: 'payment',
+                  message: 'Rent payment received from John Doe',
+                  timestamp: '5 hours ago'
+                },
+                {
+                  id: '3',
+                  type: 'maintenance',
+                  message: 'Maintenance request: Plumbing issue at Lekki House',
+                  timestamp: '1 day ago'
+                }
+              ].map(activity => (
                 <div
                   key={activity.id}
                   className="flex items-center justify-between rounded-lg border border-nav p-3"
@@ -181,7 +129,7 @@ const LandlordDashboardPage: React.FC = () => {
           <CardContent className="space-y-2">
             <Button variant="outline" className="w-full justify-start">
               <Users size={16} className="mr-2" />
-              View Applications ({MOCK_STATS.pendingApplications})
+              View Applications ({stats?.activeApplications || 0})
             </Button>
             <Button variant="outline" className="w-full justify-start">
               <Building size={16} className="mr-2" />

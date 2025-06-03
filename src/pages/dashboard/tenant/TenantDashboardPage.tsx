@@ -5,10 +5,14 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
+import { DashboardCard } from '../../../components/dashboard/DashboardCard';
+import { NotificationsList } from '../../../components/dashboard/NotificationsList';
+import { useDashboardStats } from '../../../hooks/useDashboard';
 
 const TenantDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: stats, isLoading } = useDashboardStats(user?.id || '');
 
   // Mock data for dashboard
   const recentProperties = [
@@ -27,27 +31,6 @@ const TenantDashboardPage: React.FC = () => {
       price: 450000,
       image: 'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
       status: 'Viewed'
-    }
-  ];
-
-  const notifications = [
-    {
-      id: '1',
-      type: 'property',
-      message: 'New property match found in your preferred location',
-      time: '2 hours ago'
-    },
-    {
-      id: '2',
-      type: 'roommate',
-      message: 'A potential roommate has shown interest in connecting',
-      time: '5 hours ago'
-    },
-    {
-      id: '3',
-      type: 'legal',
-      message: 'Your lease agreement review is complete',
-      time: '1 day ago'
     }
   ];
 
@@ -71,77 +54,26 @@ const TenantDashboardPage: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="border border-nav">
-            <CardContent className="flex items-center p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue/10">
-                <Building className="h-6 w-6 text-accent-blue" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-text-secondary">Properties Viewed</p>
-                <p className="text-2xl font-bold text-text-primary">12</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <Card className="border border-nav">
-            <CardContent className="flex items-center p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-green/10">
-                <Star className="h-6 w-6 text-accent-green" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-text-secondary">Saved Properties</p>
-                <p className="text-2xl font-bold text-text-primary">5</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <Card className="border border-nav">
-            <CardContent className="flex items-center p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue/10">
-                <Users className="h-6 w-6 text-accent-blue" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-text-secondary">Roommate Matches</p>
-                <p className="text-2xl font-bold text-text-primary">3</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <Card className="border border-nav">
-            <CardContent className="flex items-center p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-green/10">
-                <FileText className="h-6 w-6 text-accent-green" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-text-secondary">Applications</p>
-                <p className="text-2xl font-bold text-text-primary">2</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <DashboardCard
+          title="Properties Viewed"
+          value={stats?.propertiesViewed || 0}
+          icon={<Building className="h-4 w-4" />}
+        />
+        <DashboardCard
+          title="Saved Properties"
+          value={stats?.savedProperties || 0}
+          icon={<Star className="h-4 w-4" />}
+        />
+        <DashboardCard
+          title="Active Applications"
+          value={stats?.activeApplications || 0}
+          icon={<FileText className="h-4 w-4" />}
+        />
+        <DashboardCard
+          title="Roommate Matches"
+          value="3"
+          icon={<Users className="h-4 w-4" />}
+        />
       </div>
 
       {/* Recent Activity and Notifications */}
@@ -181,32 +113,7 @@ const TenantDashboardPage: React.FC = () => {
         </Card>
 
         {/* Notifications */}
-        <Card className="border border-nav">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Notifications</CardTitle>
-            <Bell className="h-5 w-5 text-text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className="flex cursor-pointer items-start space-x-3 rounded-lg border border-nav p-3 transition-colors hover:bg-nav/50"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-blue/10">
-                    {notification.type === 'property' && <Building className="h-4 w-4 text-accent-blue" />}
-                    {notification.type === 'roommate' && <Users className="h-4 w-4 text-accent-green" />}
-                    {notification.type === 'legal' && <FileText className="h-4 w-4 text-accent-blue" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-text-primary">{notification.message}</p>
-                    <p className="mt-1 text-xs text-text-secondary">{notification.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {user && <NotificationsList userId={user.id} />}
       </div>
 
       {/* Quick Actions */}
