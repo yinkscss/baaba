@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .from('users')
             .select('*')
             .eq('id', sessionData.session.user.id)
-            .maybeSingle();
+            .single();
           
           if (userError) throw userError;
           
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .from('users')
               .select('*')
               .eq('id', session.user.id)
-              .maybeSingle();
+              .single();
             
             if (userError) throw userError;
             
@@ -98,6 +98,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Invalid email or password. Please try again.');
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signUp = async (
     email: string, 
     password: string,
@@ -105,11 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName: string
   ) => {
     try {
+      setLoading(true);
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
         .eq('email', email)
-        .maybeSingle();
+        .single();
 
       if (existingUser) {
         throw new Error('This email is already registered. Please try logging in or use a different email address.');
@@ -137,43 +156,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message === 'Invalid login credentials') {
-          throw new Error('Invalid email or password. Please try again.');
-        }
-        throw error;
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('users')
         .update({ role: newRole })
         .eq('id', userId)
         .select()
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
 
@@ -193,6 +203,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error updating user role:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 

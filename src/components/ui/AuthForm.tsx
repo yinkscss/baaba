@@ -9,9 +9,10 @@ interface AuthFormProps {
   mode: 'login' | 'register';
   onAuthSubmit: (data: any) => Promise<void>;
   error: string | null;
+  isLoading?: boolean;
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoading }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -55,12 +56,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 <Input
                   name="lastName"
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
               </>
             )}
@@ -70,6 +73,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
+              disabled={isLoading}
             />
             <Input
               name="password"
@@ -77,6 +81,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
+              disabled={isLoading}
             />
             {error && (
               <div className="text-sm text-error-DEFAULT">{error}</div>
@@ -90,6 +95,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
               type="submit"
               variant="primary"
               className="w-full mb-3"
+              isLoading={isLoading}
             >
               {mode === 'login' ? 'Sign in' : 'Create Account'}
             </Button>
@@ -99,6 +105,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
               type="button"
               variant="outline"
               className="w-full flex items-center justify-center gap-2 mb-2"
+              disabled={isLoading}
             >
               <Chrome size={20} />
               Continue with Google
@@ -109,7 +116,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error }) => {
                 {mode === 'login' ? (
                   <>
                     Don't have an account?{' '}
-                    <Link to="/register\" className="text-accent-blue hover:text-accent-blue/80">
+                    <Link to="/register" className="text-accent-blue hover:text-accent-blue/80">
                       Sign up, it's free!
                     </Link>
                   </>

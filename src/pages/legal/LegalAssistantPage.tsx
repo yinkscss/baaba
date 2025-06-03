@@ -15,12 +15,11 @@ type Message = {
   timestamp: Date;
 };
 
-// Mock AI responses
 const AI_RESPONSES: Record<string, string> = {
-  'default': "Hello! I'm your AI Legal Assistant specializing in Nigerian tenancy law. How can I help you today?",
-  'rent': "In Nigeria, landlords typically can't increase rent during an active lease term unless specified in the agreement. For yearly leases, they must provide at least 3 months notice before renewal. The Lagos Tenancy Law of 2011 specifically requires landlords to give written notice of any rent increase.",
-  'deposit': "Security deposits in Nigeria are typically 1-2 months' rent. Landlords must return this deposit within 30 days of lease termination, minus any legitimate deductions for damages beyond normal wear and tear. Always document the property condition before moving in with photos and a signed inspection form.",
-  'eviction': "For eviction in Nigeria, landlords must provide proper notice: 7 days for weekly tenants, 1 month for monthly tenants, 3 months for yearly tenants, and 6 months for biennial tenants. They must obtain a court order before forcibly evicting you. Self-help evictions (changing locks, removing belongings, disconnecting utilities) are illegal."
+  'default': "Hello! I'm your AI Legal Assistant specializing in tenancy law. How can I help you today?",
+  'rent': "Landlords typically can't increase rent during an active lease term unless specified in the agreement. For yearly leases, they must provide adequate notice before renewal.",
+  'deposit': "Security deposits are typically 1-2 months' rent. Landlords must return this deposit within 30 days of lease termination, minus any legitimate deductions for damages beyond normal wear and tear.",
+  'eviction': "For eviction, landlords must provide proper notice and obtain a court order before forcibly evicting you. Self-help evictions (changing locks, removing belongings, disconnecting utilities) are illegal."
 };
 
 const LegalAssistantPage: React.FC = () => {
@@ -210,7 +209,7 @@ const LegalAssistantPage: React.FC = () => {
 
         <div className="mt-4 text-center text-xs text-text-muted">
           <p>
-            This AI provides general legal information based on Nigerian tenancy law, 
+            This AI provides general legal information based on tenancy law, 
             but should not be considered as formal legal advice. For specific legal issues, 
             consult with a qualified lawyer.
           </p>

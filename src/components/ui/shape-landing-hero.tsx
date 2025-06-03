@@ -1,6 +1,6 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import React from "react";
 import { Circle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 function ElegantShape({
@@ -71,8 +71,8 @@ function ElegantShape({
 
 function HeroGeometric({
     badge = "Design Collective",
-    title1 = "Elevate Your Digital Vision",
-    title2 = "Crafting Exceptional Websites",
+    title1 = "Built for",
+    title2 = "Students",
 }: {
     badge?: string;
     title1?: string;
@@ -185,7 +185,7 @@ function HeroGeometric({
                         animate="visible"
                     >
                         <p className="text-base sm:text-lg md:text-xl text-white/40 mb-8 leading-relaxed font-light tracking-wide max-w-xl mx-auto px-4">
-                            Your data is secure and only used with your consent. We prioritize privacy and safety for Nigerian students.
+                            Your data is secure and only used with your consent. We prioritize privacy and safety.
                         </p>
                     </motion.div>
                 </div>
