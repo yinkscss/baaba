@@ -24,7 +24,7 @@ import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 
-function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' }) {
+function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' | 'agent' }) {
   const { user, loading } = useAuth();
   
   if (loading) {
@@ -36,9 +36,23 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
   if (!user) {
     return <Navigate to="/login" />;
   }
+
+  // If user is pending, always redirect to onboarding
+  if (user.role === 'pending') {
+    return <Navigate to="/onboarding" />;
+  }
   
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/" />;
+  if (requiredRole) {
+    // For landlord/agent roles, allow access to landlord dashboard
+    if ((requiredRole === 'landlord' || requiredRole === 'agent') && 
+        (user.role === 'landlord' || user.role === 'agent')) {
+      return <>{children}</>;
+    }
+    
+    // For other roles, require exact match
+    if (user.role !== requiredRole) {
+      return <Navigate to="/" />;
+    }
   }
   
   return <>{children}</>;
@@ -60,7 +74,6 @@ function App() {
       {/* Public routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/properties" element={<PropertyListingsPage />} />
         <Route path="/properties/:id" element={<PropertyDetailPage />} />
         <Route path="/roommate-matching" element={<RoommateLandingPage />} />
@@ -74,6 +87,18 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
       </Route>
 
+      {/* Onboarding route */}
+      <Route 
+        path="/onboarding" 
+        element={
+          user?.role === 'pending' ? (
+            <OnboardingPage />
+          ) : (
+            <Navigate to={user ? '/dashboard' : '/login'} />
+          )
+        } 
+      />
+
       {/* Protected routes */}
       <Route element={<DashboardLayout />}>
         {/* Tenant routes */}
@@ -86,7 +111,7 @@ function App() {
           } 
         />
 
-        {/* Landlord routes */}
+        {/* Landlord/Agent routes */}
         <Route 
           path="/dashboard/landlord" 
           element={

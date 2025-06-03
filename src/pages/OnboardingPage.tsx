@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Users, ArrowRight } from 'lucide-react';
+import { Building, Users, BriefcaseBusiness, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -9,12 +9,34 @@ import { TextShimmer } from '../components/ui/text-shimmer';
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading, updateUserRole } = useAuth();
 
-  if (user) {
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  if (user.role !== 'pending') {
     navigate(user.role === 'tenant' ? '/dashboard/tenant' : '/dashboard/landlord');
     return null;
   }
+
+  const handleRoleSelection = async (role: 'tenant' | 'landlord' | 'agent') => {
+    try {
+      await updateUserRole(user.id, role);
+      navigate(role === 'tenant' ? '/dashboard/tenant' : '/dashboard/landlord');
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -32,7 +54,7 @@ const OnboardingPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -64,10 +86,10 @@ const OnboardingPage: React.FC = () => {
                   </li>
                 </ul>
                 <Button
-                  onClick={() => navigate('/register', { state: { role: 'tenant' } })}
+                  onClick={() => handleRoleSelection('tenant')}
                   className="w-full"
                 >
-                  Register as Student
+                  Continue as Student
                 </Button>
               </CardContent>
             </Card>
@@ -104,23 +126,54 @@ const OnboardingPage: React.FC = () => {
                   </li>
                 </ul>
                 <Button
-                  onClick={() => navigate('/register', { state: { role: 'landlord' } })}
+                  onClick={() => handleRoleSelection('landlord')}
                   className="w-full"
                 >
-                  Register as Landlord
+                  Continue as Landlord
                 </Button>
               </CardContent>
             </Card>
           </motion.div>
-        </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-text-secondary">
-            Already have an account?{' '}
-            <Button variant="link" onClick={() => navigate('/login')}>
-              Sign in
-            </Button>
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="h-full border border-nav transition-all duration-300 hover:border-accent-blue">
+              <CardHeader>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent-blue/10">
+                  <BriefcaseBusiness className="h-6 w-6 text-accent-blue" />
+                </div>
+                <CardTitle className="text-2xl">I'm an Agent</CardTitle>
+                <CardDescription>
+                  Manage properties on behalf of landlords
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="mb-6 space-y-3 text-text-secondary">
+                  <li className="flex items-center">
+                    <ArrowRight className="mr-2 h-4 w-4 text-accent-blue" />
+                    Manage multiple landlord portfolios
+                  </li>
+                  <li className="flex items-center">
+                    <ArrowRight className="mr-2 h-4 w-4 text-accent-blue" />
+                    Streamline tenant applications
+                  </li>
+                  <li className="flex items-center">
+                    <ArrowRight className="mr-2 h-4 w-4 text-accent-blue" />
+                    Access comprehensive analytics
+                  </li>
+                </ul>
+                <Button
+                  onClick={() => handleRoleSelection('agent')}
+                  className="w-full"
+                >
+                  Continue as Agent
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </div>

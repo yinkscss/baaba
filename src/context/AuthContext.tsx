@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { User } from '../types';
+import type { User, UserRole } from '../types';
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: 'tenant' | 'landlord', firstName: string, lastName: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUserRole: (userId: string, newRole: UserRole) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,17 +18,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session
     const getSession = async () => {
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
         if (sessionData.session) {
-          // Fetch additional user data from your profiles table
           const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('id, email, role, first_name, last_name, created_at')
+            .select('*')
             .eq('id', sessionData.session.user.id)
             .single();
           
@@ -40,7 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: userData.role,
               firstName: userData.first_name,
               lastName: userData.last_name,
-              createdAt: userData.created_at
+              phoneNumber: userData.phone_number,
+              profileImage: userData.profile_image,
+              createdAt: userData.created_at,
+              verified: userData.verified
             });
           }
         }
@@ -54,15 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getSession();
 
-    // Subscribe to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
           if (session) {
-            // Fetch user profile data
             const { data: userData, error: userError } = await supabase
               .from('users')
-              .select('id, email, role, first_name, last_name, created_at')
+              .select('*')
               .eq('id', session.user.id)
               .single();
             
@@ -75,7 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: userData.role,
                 firstName: userData.first_name,
                 lastName: userData.last_name,
-                createdAt: userData.created_at
+                phoneNumber: userData.phone_number,
+                profileImage: userData.profile_image,
+                createdAt: userData.created_at,
+                verified: userData.verified
               });
             }
           } else {
@@ -97,13 +100,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (
     email: string, 
-    password: string, 
-    role: 'tenant' | 'landlord',
+    password: string,
     firstName: string,
     lastName: string
   ) => {
     try {
-      // Check if user already exists
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
@@ -119,15 +120,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       if (data.user) {
-        // Create user profile in the users table
         const { error: profileError } = await supabase.from('users').insert([
           {
             id: data.user.id,
             email,
-            role,
+            role: 'pending',
             first_name: firstName,
             last_name: lastName,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            verified: false
           },
         ]);
         
@@ -165,8 +166,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserRole = async (userId: string, newRole: UserRole) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setUser({
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          phoneNumber: data.phone_number,
+          profileImage: data.profile_image,
+          createdAt: data.created_at,
+          verified: data.verified
+        });
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, updateUserRole }}>
       {children}
     </AuthContext.Provider>
   );

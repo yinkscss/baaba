@@ -1,4 +1,4 @@
-export type UserRole = 'tenant' | 'landlord';
+export type UserRole = 'tenant' | 'landlord' | 'agent' | 'pending';
 
 export interface User {
   id: string;
@@ -6,7 +6,10 @@ export interface User {
   role: UserRole;
   firstName: string;
   lastName: string;
+  phoneNumber?: string;
+  profileImage?: string;
   createdAt: string;
+  verified: boolean;
 }
 
 export interface Property {
