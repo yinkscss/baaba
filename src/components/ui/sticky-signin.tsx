@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, ArrowLeft } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import Button from './Button';
 import { cn } from '../../lib/utils';
-import { useAuth } from '../../context/AuthContext';
 
 interface StickySignInProps {
   className?: string;
@@ -11,17 +10,6 @@ interface StickySignInProps {
 
 export function StickySignIn({ className }: StickySignInProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const handleClick = () => {
-    if (user) {
-      // Navigate to the appropriate dashboard based on user role
-      const dashboardPath = user.role === 'tenant' ? '/dashboard/tenant' : '/dashboard/landlord';
-      navigate(dashboardPath);
-    } else {
-      navigate('/login');
-    }
-  };
 
   return (
     <div className={cn(
@@ -30,20 +18,11 @@ export function StickySignIn({ className }: StickySignInProps) {
       className
     )}>
       <Button 
-        onClick={handleClick}
+        onClick={() => navigate('/login')}
         className="shadow-lg"
       >
-        {user ? (
-          <>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </>
-        ) : (
-          <>
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign in
-          </>
-        )}
+        <LogIn className="mr-2 h-4 w-4" />
+        Sign in
       </Button>
     </div>
   );
