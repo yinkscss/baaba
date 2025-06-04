@@ -10,7 +10,17 @@ export function useDashboardStats(userId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('dashboard_stats')
-        .select('*')
+        .select(`
+          id,
+          user_id as userId,
+          properties_viewed as propertiesViewed,
+          saved_properties as savedProperties,
+          active_applications as activeApplications,
+          total_properties as totalProperties,
+          total_income as totalIncome,
+          occupancy_rate as occupancyRate,
+          last_updated as lastUpdated
+        `)
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -18,7 +28,7 @@ export function useDashboardStats(userId: string) {
 
       // If no stats exist yet, create default stats
       if (!data) {
-        const defaultStats: Omit<DashboardStats, 'id'> = {
+        const defaultStats = {
           user_id: userId,
           properties_viewed: 0,
           saved_properties: 0,
@@ -32,7 +42,17 @@ export function useDashboardStats(userId: string) {
         const { data: newStats, error: insertError } = await supabase
           .from('dashboard_stats')
           .insert(defaultStats)
-          .select()
+          .select(`
+            id,
+            user_id as userId,
+            properties_viewed as propertiesViewed,
+            saved_properties as savedProperties,
+            active_applications as activeApplications,
+            total_properties as totalProperties,
+            total_income as totalIncome,
+            occupancy_rate as occupancyRate,
+            last_updated as lastUpdated
+          `)
           .single();
 
         if (insertError) throw insertError;
@@ -54,7 +74,14 @@ export function useNotifications(userId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          id,
+          user_id as userId,
+          type,
+          message,
+          read,
+          created_at as createdAt
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -89,7 +116,14 @@ export function useActivities(userId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('activities')
-        .select('*')
+        .select(`
+          id,
+          user_id as userId,
+          type,
+          description,
+          metadata,
+          created_at as createdAt
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
