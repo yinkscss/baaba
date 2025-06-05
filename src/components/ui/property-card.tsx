@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Bed, Bath, Square, Heart, Share2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import Button from './Button';
 
@@ -32,6 +32,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const { pathname } = useLocation();
+  
+  // Determine if we're in the dashboard
+  const isDashboard = pathname.includes('/dashboard');
+  const detailsPath = isDashboard ? `/dashboard/tenant/properties/${id}` : `/properties/${id}`;
 
   return (
     <motion.div
@@ -141,7 +146,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
               </p>
               <p className="text-xs text-text-secondary">per year</p>
             </div>
-            <Link to={`/properties/${id}`}>
+            <Link to={detailsPath}>
               <Button variant="primary" size="sm">View Details</Button>
             </Link>
           </div>
