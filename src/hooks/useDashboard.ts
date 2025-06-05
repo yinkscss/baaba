@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { DashboardStats, Notification, Activity } from '../types/dashboard';
+import type { 
+  DashboardStats, Notification, Activity, 
+  Lease, Payment, Complaint, User 
+} from '../types';
 
 export function useDashboardStats(userId: string) {
   const queryClient = useQueryClient();
@@ -131,4 +134,184 @@ export function useActivities(userId: string) {
       return data as Activity[];
     }
   });
+}
+
+export function useCurrentLease(userId: string) {
+  return useQuery({
+    queryKey: ['currentLease', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('leases')
+        .select(`
+          id,
+          user_id as userId,
+          property_id as propertyId,
+          start_date as startDate,
+          end_date as endDate,
+          rent_amount as rentAmount,
+          lease_document_url as leaseDocumentUrl,
+          landlord_contact_id as landlordContactId,
+          created_at as createdAt,
+          updated_at as updatedAt,
+          property:properties (
+            id,
+            title,
+            description,
+            location,
+            address,
+            images
+          ),
+          landlordContact:users (
+            id,
+            first_name as firstName,
+            last_name as lastName,
+            phone_number as phoneNumber
+          )
+        `)
+        .eq('user_id', userId)
+        .order('start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Lease | null;
+    }
+  });
+}
+
+export function usePayments(userId: string) {
+  return useQuery({
+    queryKey: ['payments', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          id,
+          lease_id as leaseId,
+          amount,
+          payment_date as paymentDate,
+          status,
+          transaction_id as transactionId,
+          created_at as createdAt
+        `)
+        .eq('lease:leases.user_id', userId)
+        .order('payment_date', { ascending: false });
+
+      if (error) throw error;
+      return data as Payment[];
+    }
+  });
+}
+
+export function useComplaints(userId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['complaints', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select(`
+          id,
+          user_id as userId,
+          property_id as propertyId,
+          subject,
+          description,
+          category,
+          status,
+          priority,
+          resolution_notes as resolutionNotes,
+          rating,
+          created_at as createdAt,
+          updated_at as updatedAt
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Complaint[];
+    }
+  });
+
+  const submitComplaint = useMutation({
+    mutationFn: async (complaint: Omit<Complaint, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+      const { data, error } = await supabase
+        .from('complaints')
+        .insert({
+          ...complaint,
+          user_id: userId,
+          status: 'open',
+          priority: 'medium'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['complaints', userId] });
+    }
+  });
+
+  return {
+    ...query,
+    submitComplaint
+  };
+}
+
+export function useUserProfile(userId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          email,
+          first_name as firstName,
+          last_name as lastName,
+          role,
+          phone_number as phoneNumber,
+          profile_image as profileImage,
+          created_at as createdAt,
+          verified,
+          notification_preferences as notificationPreferences
+        `)
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return data as User;
+    }
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: async (updates: Partial<User>) => {
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          first_name: updates.firstName,
+          last_name: updates.lastName,
+          phone_number: updates.phoneNumber,
+          notification_preferences: updates.notificationPreferences
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+    }
+  });
+
+  return {
+    ...query,
+    updateProfile
+  };
 }

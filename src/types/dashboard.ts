@@ -27,3 +27,43 @@ export interface Activity {
   metadata: Record<string, any>;
   createdAt: string;
 }
+
+export interface Lease {
+  id: string;
+  userId: string;
+  propertyId: string;
+  startDate: string;
+  endDate: string;
+  rentAmount: number;
+  leaseDocumentUrl?: string;
+  landlordContactId?: string;
+  createdAt: string;
+  updatedAt: string;
+  property?: Property;
+  landlordContact?: User;
+}
+
+export interface Payment {
+  id: string;
+  leaseId: string;
+  amount: number;
+  paymentDate: string;
+  status: 'paid' | 'pending' | 'overdue';
+  transactionId?: string;
+  createdAt: string;
+}
+
+export interface Complaint {
+  id: string;
+  userId: string;
+  propertyId?: string;
+  subject: string;
+  description: string;
+  category: 'maintenance' | 'noise' | 'billing' | 'security' | 'other';
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  resolutionNotes?: string;
+  rating?: number;
+  createdAt: string;
+  updatedAt: string;
+}

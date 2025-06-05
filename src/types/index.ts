@@ -10,6 +10,7 @@ export interface User {
   profileImage?: string;
   createdAt: string;
   verified: boolean;
+  notificationPreferences?: Record<string, boolean>;
 }
 
 export interface Property {
