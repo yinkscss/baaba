@@ -15,14 +15,14 @@ export function useDashboardStats(userId: string) {
         .from('dashboard_stats')
         .select(`
           id,
-          user_id:userId,
-          properties_viewed:propertiesViewed,
-          saved_properties:savedProperties,
-          active_applications:activeApplications,
-          total_properties:totalProperties,
-          total_income:totalIncome,
-          occupancy_rate:occupancyRate,
-          last_updated:lastUpdated
+          user_id,
+          properties_viewed,
+          saved_properties,
+          active_applications,
+          total_properties,
+          total_income,
+          occupancy_rate,
+          last_updated
         `)
         .eq('user_id', userId)
         .maybeSingle();
@@ -47,22 +47,45 @@ export function useDashboardStats(userId: string) {
           .insert(defaultStats)
           .select(`
             id,
-            user_id:userId,
-            properties_viewed:propertiesViewed,
-            saved_properties:savedProperties,
-            active_applications:activeApplications,
-            total_properties:totalProperties,
-            total_income:totalIncome,
-            occupancy_rate:occupancyRate,
-            last_updated:lastUpdated
+            user_id,
+            properties_viewed,
+            saved_properties,
+            active_applications,
+            total_properties,
+            total_income,
+            occupancy_rate,
+            last_updated
           `)
           .single();
 
         if (insertError) throw insertError;
-        return newStats as DashboardStats;
+        
+        // Transform snake_case to camelCase
+        return {
+          id: newStats.id,
+          userId: newStats.user_id,
+          propertiesViewed: newStats.properties_viewed,
+          savedProperties: newStats.saved_properties,
+          activeApplications: newStats.active_applications,
+          totalProperties: newStats.total_properties,
+          totalIncome: newStats.total_income,
+          occupancyRate: newStats.occupancy_rate,
+          lastUpdated: newStats.last_updated
+        } as DashboardStats;
       }
 
-      return data as DashboardStats;
+      // Transform snake_case to camelCase
+      return {
+        id: data.id,
+        userId: data.user_id,
+        propertiesViewed: data.properties_viewed,
+        savedProperties: data.saved_properties,
+        activeApplications: data.active_applications,
+        totalProperties: data.total_properties,
+        totalIncome: data.total_income,
+        occupancyRate: data.occupancy_rate,
+        lastUpdated: data.last_updated
+      } as DashboardStats;
     }
   });
 
@@ -79,17 +102,26 @@ export function useNotifications(userId: string) {
         .from('notifications')
         .select(`
           id,
-          user_id:userId,
+          user_id,
           type,
           message,
           read,
-          created_at:createdAt
+          created_at
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Notification[];
+
+      // Transform snake_case to camelCase
+      return data.map(notification => ({
+        id: notification.id,
+        userId: notification.user_id,
+        type: notification.type,
+        message: notification.message,
+        read: notification.read,
+        createdAt: notification.created_at
+      })) as Notification[];
     }
   });
 
@@ -121,17 +153,26 @@ export function useActivities(userId: string) {
         .from('activities')
         .select(`
           id,
-          user_id:userId,
+          user_id,
           type,
           description,
           metadata,
-          created_at:createdAt
+          created_at
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Activity[];
+
+      // Transform snake_case to camelCase
+      return data.map(activity => ({
+        id: activity.id,
+        userId: activity.user_id,
+        type: activity.type,
+        description: activity.description,
+        metadata: activity.metadata,
+        createdAt: activity.created_at
+      })) as Activity[];
     }
   });
 }
@@ -144,15 +185,15 @@ export function useCurrentLease(userId: string) {
         .from('leases')
         .select(`
           id,
-          user_id:userId,
-          property_id:propertyId,
-          start_date:startDate,
-          end_date:endDate,
-          rent_amount:rentAmount,
-          lease_document_url:leaseDocumentUrl,
-          landlord_contact_id:landlordContactId,
-          created_at:createdAt,
-          updated_at:updatedAt,
+          user_id,
+          property_id,
+          start_date,
+          end_date,
+          rent_amount,
+          lease_document_url,
+          landlord_contact_id,
+          created_at,
+          updated_at,
           property:properties (
             id,
             title,
@@ -163,9 +204,9 @@ export function useCurrentLease(userId: string) {
           ),
           landlordContact:users (
             id,
-            first_name:firstName,
-            last_name:lastName,
-            phone_number:phoneNumber
+            first_name,
+            last_name,
+            phone_number
           )
         `)
         .eq('user_id', userId)
@@ -174,7 +215,31 @@ export function useCurrentLease(userId: string) {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Lease | null;
+      
+      if (!data) return null;
+
+      // Transform snake_case to camelCase
+      return {
+        id: data.id,
+        userId: data.user_id,
+        propertyId: data.property_id,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        rentAmount: data.rent_amount,
+        leaseDocumentUrl: data.lease_document_url,
+        landlordContactId: data.landlord_contact_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        property: {
+          ...data.property
+        },
+        landlordContact: data.landlordContact ? {
+          id: data.landlordContact.id,
+          firstName: data.landlordContact.first_name,
+          lastName: data.landlordContact.last_name,
+          phoneNumber: data.landlordContact.phone_number
+        } : null
+      } as Lease;
     }
   });
 }
@@ -187,18 +252,28 @@ export function usePayments(userId: string) {
         .from('payments')
         .select(`
           id,
-          lease_id:leaseId,
+          lease_id,
           amount,
-          payment_date:paymentDate,
+          payment_date,
           status,
-          transaction_id:transactionId,
-          created_at:createdAt
+          transaction_id,
+          created_at
         `)
         .eq('lease:leases.user_id', userId)
         .order('payment_date', { ascending: false });
 
       if (error) throw error;
-      return data as Payment[];
+
+      // Transform snake_case to camelCase
+      return data.map(payment => ({
+        id: payment.id,
+        leaseId: payment.lease_id,
+        amount: payment.amount,
+        paymentDate: payment.payment_date,
+        status: payment.status,
+        transactionId: payment.transaction_id,
+        createdAt: payment.created_at
+      })) as Payment[];
     }
   });
 }
@@ -229,12 +304,27 @@ export function useComplaints(userId: string) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Complaint[];
+
+      // Transform snake_case to camelCase
+      return data.map(complaint => ({
+        id: complaint.id,
+        userId: complaint.user_id,
+        propertyId: complaint.property_id,
+        subject: complaint.subject,
+        description: complaint.description,
+        category: complaint.category,
+        status: complaint.status,
+        priority: complaint.priority,
+        resolutionNotes: complaint.resolution_notes,
+        rating: complaint.rating,
+        createdAt: complaint.created_at,
+        updatedAt: complaint.updated_at
+      })) as Complaint[];
     }
   });
 
   const submitComplaint = useMutation({
-    mutationFn: async (complaint: Omit<Complaint, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (complaint: Omit<Complaint, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       const { data, error } = await supabase
         .from('complaints')
         .insert({
@@ -271,20 +361,33 @@ export function useUserProfile(userId: string) {
         .select(`
           id,
           email,
-          first_name:firstName,
-          last_name:lastName,
+          first_name,
+          last_name,
           role,
-          phone_number:phoneNumber,
-          profile_image:profileImage,
-          created_at:createdAt,
+          phone_number,
+          profile_image,
+          created_at,
           verified,
-          notification_preferences:notificationPreferences
+          notification_preferences
         `)
         .eq('id', userId)
         .single();
 
       if (error) throw error;
-      return data as User;
+
+      // Transform snake_case to camelCase
+      return {
+        id: data.id,
+        email: data.email,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        role: data.role,
+        phoneNumber: data.phone_number,
+        profileImage: data.profile_image,
+        createdAt: data.created_at,
+        verified: data.verified,
+        notificationPreferences: data.notification_preferences
+      } as User;
     }
   });
 
@@ -303,7 +406,20 @@ export function useUserProfile(userId: string) {
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Transform snake_case to camelCase
+      return {
+        id: data.id,
+        email: data.email,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        role: data.role,
+        phoneNumber: data.phone_number,
+        profileImage: data.profile_image,
+        createdAt: data.created_at,
+        verified: data.verified,
+        notificationPreferences: data.notification_preferences
+      } as User;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
