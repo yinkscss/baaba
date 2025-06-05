@@ -1,3 +1,5 @@
+import type { User, Property } from './index';
+
 export interface DashboardStats {
   id: string;
   userId: string;
@@ -55,15 +57,40 @@ export interface Payment {
 
 export interface Complaint {
   id: string;
-  user_id: string;
-  property_id?: string;
+  userId: string;
+  propertyId?: string;
   subject: string;
   description: string;
   category: 'maintenance' | 'noise' | 'billing' | 'security' | 'other';
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  resolution_notes?: string;
+  resolutionNotes?: string;
   rating?: number;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InspectionRequest {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  requestedDate: string;
+  message: string;
+  status: 'new' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  property?: Property;
+  tenant?: User;
+}
+
+export interface EscrowTransaction {
+  id: string;
+  leaseId: string;
+  amount: number;
+  status: 'pending_release' | 'released' | 'refunded';
+  initiatedAt: string;
+  releasedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  lease?: Lease;
 }

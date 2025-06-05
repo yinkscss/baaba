@@ -11,6 +11,8 @@ export interface User {
   createdAt: string;
   verified: boolean;
   notificationPreferences?: Record<string, boolean>;
+  schoolIdVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 export interface Property {
@@ -30,6 +32,7 @@ export interface Property {
   updatedAt: string;
   available: boolean;
   featured: boolean;
+  status: 'active' | 'paused' | 'rented';
 }
 
 export interface PaymentPlan {
