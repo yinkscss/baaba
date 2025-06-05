@@ -1,19 +1,24 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Users, CreditCard, TrendingUp, Plus, Bell, Settings } from 'lucide-react';
+import { Building, Users, CreditCard, TrendingUp, Plus, Bell, Settings, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { DashboardCard } from '../../../components/dashboard/DashboardCard';
 import { NotificationsList } from '../../../components/dashboard/NotificationsList';
-import { useDashboardStats } from '../../../hooks/useDashboard';
+import { useDashboardStats, useInspectionRequests, useEscrowTransactions } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
 
 const LandlordDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: stats, isLoading } = useDashboardStats(user?.id || '');
+  const { data: stats } = useDashboardStats(user?.id || '');
+  const { data: inspectionRequests } = useInspectionRequests();
+  const { data: escrowTransactions } = useEscrowTransactions();
+
+  const pendingInspections = inspectionRequests?.filter(req => req.status === 'new') || [];
+  const pendingEscrow = escrowTransactions?.filter(tx => tx.status === 'pending_release') || [];
 
   return (
     <div className="space-y-6">
@@ -40,7 +45,7 @@ const LandlordDashboardPage: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           title="Total Properties"
           value={stats?.totalProperties || 0}
@@ -64,88 +69,102 @@ const LandlordDashboardPage: React.FC = () => {
             isPositive: true
           }}
         />
+
+        <DashboardCard
+          title="Pending Requests"
+          value={pendingInspections.length}
+          icon={<Clock className="h-4 w-4" />}
+          description="Inspection requests"
+        />
       </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Recent Activities */}
+        {/* Inspection Requests */}
         <Card className="border border-nav md:col-span-2">
           <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
+            <CardTitle>Recent Inspection Requests</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  id: '1',
-                  type: 'application',
-                  message: 'New tenant application for Yaba Apartment',
-                  timestamp: '2 hours ago'
-                },
-                {
-                  id: '2',
-                  type: 'payment',
-                  message: 'Rent payment received from John Doe',
-                  timestamp: '5 hours ago'
-                },
-                {
-                  id: '3',
-                  type: 'maintenance',
-                  message: 'Maintenance request: Plumbing issue at Lekki House',
-                  timestamp: '1 day ago'
-                }
-              ].map(activity => (
+              {inspectionRequests?.slice(0, 5).map((request) => (
                 <div
-                  key={activity.id}
-                  className="flex items-center justify-between rounded-lg border border-nav p-3"
+                  key={request.id}
+                  className="flex items-center justify-between rounded-lg border border-nav p-4"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="rounded-full bg-nav p-2">
-                      {activity.type === 'application' ? (
-                        <Users size={16} className="text-accent-blue" />
-                      ) : activity.type === 'payment' ? (
-                        <CreditCard size={16} className="text-accent-green" />
+                      {request.status === 'new' ? (
+                        <Clock className="h-5 w-5 text-warning-DEFAULT" />
+                      ) : request.status === 'approved' ? (
+                        <CheckCircle className="h-5 w-5 text-accent-green" />
                       ) : (
-                        <Bell size={16} className="text-warning-DEFAULT" />
+                        <XCircle className="h-5 w-5 text-error-DEFAULT" />
                       )}
                     </div>
                     <div>
-                      <p className="text-sm text-text-primary">{activity.message}</p>
-                      <p className="text-xs text-text-muted">{activity.timestamp}</p>
+                      <p className="font-medium text-text-primary">
+                        {request.tenant?.firstName} {request.tenant?.lastName}
+                      </p>
+                      <p className="text-sm text-text-secondary">
+                        {request.property?.title}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {new Date(request.requestedDate).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate('/dashboard/landlord/inspection-requests')}
+                  >
+                    View
+                  </Button>
                 </div>
               ))}
+              {(!inspectionRequests || inspectionRequests.length === 0) && (
+                <p className="text-center text-text-secondary">No inspection requests</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Escrow Transactions */}
         <Card className="border border-nav">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Pending Escrow</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              <Users size={16} className="mr-2" />
-              View Applications ({stats?.activeApplications || 0})
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Building size={16} className="mr-2" />
-              Manage Properties
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <CreditCard size={16} className="mr-2" />
-              Payment History
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Bell size={16} className="mr-2" />
-              Notifications
-            </Button>
+          <CardContent>
+            <div className="space-y-4">
+              {pendingEscrow.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="rounded-lg border border-nav p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-medium text-text-primary">
+                      {formatCurrency(transaction.amount)}
+                    </span>
+                    <span className="rounded-full bg-warning-DEFAULT/10 px-2 py-1 text-xs font-medium text-warning-DEFAULT">
+                      Pending
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary">
+                    Initiated {new Date(transaction.initiatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+              {(!pendingEscrow || pendingEscrow.length === 0) && (
+                <p className="text-center text-text-secondary">No pending escrow transactions</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Notifications */}
+      {user && <NotificationsList userId={user.id} />}
     </div>
   );
 };
