@@ -1,62 +1,107 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
 import { SpotifyLogo } from '../../../components/icons/BrandLogos';
-import Button from '../../../components/ui/Button';
+import { RoommatePreferenceForm } from '../../../components/dashboard/RoommatePreferenceForm';
+import { useAuth } from '../../../context/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../../lib/supabase';
+import type { RoommatePreference } from '../../../types';
 
 const TenantRoommateMatchingPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: preferences, isLoading } = useQuery({
+    queryKey: ['roommatePreferences', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('roommate_preferences')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const updatePreferences = useMutation({
+    mutationFn: async (data: Partial<RoommatePreference>) => {
+      const { error } = await supabase
+        .from('roommate_preferences')
+        .upsert({
+          user_id: user?.id,
+          ...data
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roommatePreferences', user?.id] });
+    }
+  });
+
+  const handleSubmit = async (data: any) => {
+    try {
+      await updatePreferences.mutateAsync(data);
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
-          Find Your Perfect Roommate
+          Roommate Matching
         </h1>
         <p className="mt-1 text-text-secondary">
-          Connect with compatible roommates based on your lifestyle and preferences
+          Set your preferences to find compatible roommates
         </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border border-nav">
-          <CardHeader>
-            <CardTitle>Connect Your Spotify</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-text-secondary">
-              Link your Spotify account to find roommates with similar music taste
-            </p>
-            <Button className="flex items-center">
-              <SpotifyLogo className="mr-2 h-4 w-4" />
-              Connect Spotify
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-nav">
-          <CardHeader>
-            <CardTitle>Your Preferences</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-text-secondary">
-              Set up your roommate preferences to get better matches
-            </p>
-            <Button variant="outline">Update Preferences</Button>
-          </CardContent>
-        </Card>
       </div>
 
       <Card className="border border-nav">
         <CardHeader>
-          <CardTitle>Potential Matches</CardTitle>
+          <CardTitle>Your Preferences</CardTitle>
+          <CardDescription>
+            Tell us about your lifestyle and preferences to find better matches
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-text-secondary">
-            Complete your profile and preferences to see potential roommate matches
-          </p>
+          <RoommatePreferenceForm
+            onSubmit={handleSubmit}
+            initialData={preferences}
+            isLoading={updatePreferences.isLoading}
+          />
         </CardContent>
       </Card>
+
+      {preferences && (
+        <Card className="border border-nav">
+          <CardHeader>
+            <CardTitle>Potential Matches</CardTitle>
+            <CardDescription>
+              Students with similar preferences and interests
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-text-secondary">
+              <SpotifyLogo className="mx-auto mb-4 h-12 w-12 opacity-50" />
+              <p>
+                Connect your Spotify account to see potential matches based on music taste.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
