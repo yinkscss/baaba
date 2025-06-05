@@ -55,15 +55,15 @@ export interface Payment {
 
 export interface Complaint {
   id: string;
-  userId: string;
-  propertyId?: string;
+  user_id: string;
+  property_id?: string;
   subject: string;
   description: string;
   category: 'maintenance' | 'noise' | 'billing' | 'security' | 'other';
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  resolutionNotes?: string;
+  resolution_notes?: string;
   rating?: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }

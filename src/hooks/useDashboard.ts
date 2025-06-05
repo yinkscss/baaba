@@ -213,17 +213,17 @@ export function useComplaints(userId: string) {
         .from('complaints')
         .select(`
           id,
-          user_id:userId,
-          property_id:propertyId,
+          user_id,
+          property_id,
           subject,
           description,
           category,
           status,
           priority,
-          resolution_notes:resolutionNotes,
+          resolution_notes,
           rating,
-          created_at:createdAt,
-          updated_at:updatedAt
+          created_at,
+          updated_at
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -234,7 +234,7 @@ export function useComplaints(userId: string) {
   });
 
   const submitComplaint = useMutation({
-    mutationFn: async (complaint: Omit<Complaint, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (complaint: Omit<Complaint, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('complaints')
         .insert({
