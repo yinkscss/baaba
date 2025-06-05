@@ -15,14 +15,14 @@ export function useDashboardStats(userId: string) {
         .from('dashboard_stats')
         .select(`
           id,
-          user_id as userId,
-          properties_viewed as propertiesViewed,
-          saved_properties as savedProperties,
-          active_applications as activeApplications,
-          total_properties as totalProperties,
-          total_income as totalIncome,
-          occupancy_rate as occupancyRate,
-          last_updated as lastUpdated
+          user_id:userId,
+          properties_viewed:propertiesViewed,
+          saved_properties:savedProperties,
+          active_applications:activeApplications,
+          total_properties:totalProperties,
+          total_income:totalIncome,
+          occupancy_rate:occupancyRate,
+          last_updated:lastUpdated
         `)
         .eq('user_id', userId)
         .maybeSingle();
@@ -47,14 +47,14 @@ export function useDashboardStats(userId: string) {
           .insert(defaultStats)
           .select(`
             id,
-            user_id as userId,
-            properties_viewed as propertiesViewed,
-            saved_properties as savedProperties,
-            active_applications as activeApplications,
-            total_properties as totalProperties,
-            total_income as totalIncome,
-            occupancy_rate as occupancyRate,
-            last_updated as lastUpdated
+            user_id:userId,
+            properties_viewed:propertiesViewed,
+            saved_properties:savedProperties,
+            active_applications:activeApplications,
+            total_properties:totalProperties,
+            total_income:totalIncome,
+            occupancy_rate:occupancyRate,
+            last_updated:lastUpdated
           `)
           .single();
 
@@ -79,11 +79,11 @@ export function useNotifications(userId: string) {
         .from('notifications')
         .select(`
           id,
-          user_id as userId,
+          user_id:userId,
           type,
           message,
           read,
-          created_at as createdAt
+          created_at:createdAt
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -121,11 +121,11 @@ export function useActivities(userId: string) {
         .from('activities')
         .select(`
           id,
-          user_id as userId,
+          user_id:userId,
           type,
           description,
           metadata,
-          created_at as createdAt
+          created_at:createdAt
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -144,15 +144,15 @@ export function useCurrentLease(userId: string) {
         .from('leases')
         .select(`
           id,
-          user_id as userId,
-          property_id as propertyId,
-          start_date as startDate,
-          end_date as endDate,
-          rent_amount as rentAmount,
-          lease_document_url as leaseDocumentUrl,
-          landlord_contact_id as landlordContactId,
-          created_at as createdAt,
-          updated_at as updatedAt,
+          user_id:userId,
+          property_id:propertyId,
+          start_date:startDate,
+          end_date:endDate,
+          rent_amount:rentAmount,
+          lease_document_url:leaseDocumentUrl,
+          landlord_contact_id:landlordContactId,
+          created_at:createdAt,
+          updated_at:updatedAt,
           property:properties (
             id,
             title,
@@ -163,9 +163,9 @@ export function useCurrentLease(userId: string) {
           ),
           landlordContact:users (
             id,
-            first_name as firstName,
-            last_name as lastName,
-            phone_number as phoneNumber
+            first_name:firstName,
+            last_name:lastName,
+            phone_number:phoneNumber
           )
         `)
         .eq('user_id', userId)
@@ -187,12 +187,12 @@ export function usePayments(userId: string) {
         .from('payments')
         .select(`
           id,
-          lease_id as leaseId,
+          lease_id:leaseId,
           amount,
-          payment_date as paymentDate,
+          payment_date:paymentDate,
           status,
-          transaction_id as transactionId,
-          created_at as createdAt
+          transaction_id:transactionId,
+          created_at:createdAt
         `)
         .eq('lease:leases.user_id', userId)
         .order('payment_date', { ascending: false });
@@ -213,17 +213,17 @@ export function useComplaints(userId: string) {
         .from('complaints')
         .select(`
           id,
-          user_id as userId,
-          property_id as propertyId,
+          user_id:userId,
+          property_id:propertyId,
           subject,
           description,
           category,
           status,
           priority,
-          resolution_notes as resolutionNotes,
+          resolution_notes:resolutionNotes,
           rating,
-          created_at as createdAt,
-          updated_at as updatedAt
+          created_at:createdAt,
+          updated_at:updatedAt
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -271,14 +271,14 @@ export function useUserProfile(userId: string) {
         .select(`
           id,
           email,
-          first_name as firstName,
-          last_name as lastName,
+          first_name:firstName,
+          last_name:lastName,
           role,
-          phone_number as phoneNumber,
-          profile_image as profileImage,
-          created_at as createdAt,
+          phone_number:phoneNumber,
+          profile_image:profileImage,
+          created_at:createdAt,
           verified,
-          notification_preferences as notificationPreferences
+          notification_preferences:notificationPreferences
         `)
         .eq('id', userId)
         .single();

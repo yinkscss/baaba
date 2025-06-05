@@ -1,24 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
-import { User, Mail, Phone, Shield, Bell, Upload } from 'lucide-react';
+import { User, Upload } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { useAuth } from '../../../context/AuthContext';
+import { useUserProfile } from '../../../hooks/useDashboard';
 
 const TenantSettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
-  });
+  const { data: profile, isLoading, updateProfile } = useUserProfile(user?.id || '');
 
-  const [notificationPreferences, setNotificationPreferences] = useState({
-    email: true,
-    push: true,
-    sms: false,
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+
+    try {
+      await updateProfile.mutateAsync({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phoneNumber: profile.phoneNumber,
+        notificationPreferences: profile.notificationPreferences
+      });
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!profile) return null;
 
   return (
     <div className="space-y-6">
@@ -38,12 +54,12 @@ const TenantSettingsPage: React.FC = () => {
             <CardDescription>Update your personal information</CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="mb-6 flex items-center justify-center">
                 <div className="relative">
-                  {user?.profileImage ? (
+                  {profile.profileImage ? (
                     <img
-                      src={user.profileImage}
+                      src={profile.profileImage}
                       alt="Profile"
                       className="h-24 w-24 rounded-full object-cover"
                     />
@@ -61,36 +77,76 @@ const TenantSettingsPage: React.FC = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
                   label="First Name"
-                  value={profileData.firstName}
-                  onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                  value={profile.firstName}
+                  onChange={(e) => updateProfile.mutate({ ...profile, firstName: e.target.value })}
                 />
                 <Input
                   label="Last Name"
-                  value={profileData.lastName}
-                  onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                  value={profile.lastName}
+                  onChange={(e) => updateProfile.mutate({ ...profile, lastName: e.target.value })}
                 />
               </div>
 
               <Input
                 label="Email"
                 type="email"
-                value={profileData.email}
-                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                value={profile.email}
                 disabled
               />
 
               <Input
                 label="Phone Number"
-                value={profileData.phoneNumber}
-                onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
+                value={profile.phoneNumber || ''}
+                onChange={(e) => updateProfile.mutate({ ...profile, phoneNumber: e.target.value })}
               />
 
-              <Button className="w-full">Save Changes</Button>
+              <Button 
+                type="submit" 
+                className="w-full"
+                isLoading={updateProfile.isLoading}
+              >
+                Save Changes
+              </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="space-y-6" />
+        <div className="space-y-6">
+          <Card className="border border-nav">
+            <CardHeader>
+              <CardTitle>Notification Preferences</CardTitle>
+              <CardDescription>Choose how you want to be notified</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries({
+                  email_notifications: 'Email Notifications',
+                  sms_notifications: 'SMS Notifications',
+                  push_notifications: 'Push Notifications'
+                }).map(([key, label]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-text-primary">{label}</span>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        className="peer sr-only"
+                        checked={profile.notificationPreferences?.[key] || false}
+                        onChange={(e) => updateProfile.mutate({
+                          ...profile,
+                          notificationPreferences: {
+                            ...profile.notificationPreferences,
+                            [key]: e.target.checked
+                          }
+                        })}
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-nav after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent-blue peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-blue/20"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
