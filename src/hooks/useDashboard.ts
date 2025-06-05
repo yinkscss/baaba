@@ -194,7 +194,7 @@ export function useCurrentLease(userId: string) {
           landlord_contact_id,
           created_at,
           updated_at,
-          property:properties (
+          properties!property_id (
             id,
             title,
             description,
@@ -202,7 +202,7 @@ export function useCurrentLease(userId: string) {
             address,
             images
           ),
-          landlordContact:users (
+          users!landlord_contact_id (
             id,
             first_name,
             last_name,
@@ -231,13 +231,13 @@ export function useCurrentLease(userId: string) {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
         property: {
-          ...data.property
+          ...data.properties
         },
-        landlordContact: data.landlordContact ? {
-          id: data.landlordContact.id,
-          firstName: data.landlordContact.first_name,
-          lastName: data.landlordContact.last_name,
-          phoneNumber: data.landlordContact.phone_number
+        landlordContact: data.users ? {
+          id: data.users.id,
+          firstName: data.users.first_name,
+          lastName: data.users.last_name,
+          phoneNumber: data.users.phone_number
         } : null
       } as Lease;
     }
@@ -257,9 +257,12 @@ export function usePayments(userId: string) {
           payment_date,
           status,
           transaction_id,
-          created_at
+          created_at,
+          leases!lease_id (
+            user_id
+          )
         `)
-        .eq('lease:leases.user_id', userId)
+        .eq('leases.user_id', userId)
         .order('payment_date', { ascending: false });
 
       if (error) throw error;
