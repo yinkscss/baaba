@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Building, Upload, Plus, Minus, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { v4 as uuidv4 } from 'uuid';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
+import { useAuth } from '../../../context/AuthContext';
+import { supabase } from '../../../lib/supabase';
 
 interface PropertyFormData {
   title: string;
@@ -22,10 +25,13 @@ interface PropertyFormData {
 
 const AddPropertyPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [amenities, setAmenities] = useState<string[]>([]);
   const [newAmenity, setNewAmenity] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
   
   const { register, handleSubmit, formState: { errors }, watch } = useForm<PropertyFormData>();
   
@@ -43,28 +49,73 @@ const AddPropertyPage: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newPreviewUrls = Array.from(files).map(file => URL.createObjectURL(file));
-      setPreviewImages([...previewImages, ...newPreviewUrls]);
+      const newFiles = Array.from(files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+      
+      const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
+      setPreviewImages(prev => [...prev, ...newPreviewUrls]);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (files: File[]): Promise<string[]> => {
+    const uploadPromises = files.map(async (file) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('property_images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('property_images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    });
+
+    return Promise.all(uploadPromises);
   };
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
       setIsSubmitting(true);
+      setError(null);
+
+      // Upload images
+      const imageUrls = await uploadImages(selectedFiles);
+
+      // Create property listing
+      const { error: insertError } = await supabase
+        .from('properties')
+        .insert({
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          location: data.location,
+          address: data.address,
+          bedrooms: data.bedrooms,
+          bathrooms: data.bathrooms,
+          size: data.size,
+          amenities,
+          images: imageUrls,
+          landlord_id: user?.id,
+          status: 'active'
+        });
+
+      if (insertError) throw insertError;
       
-      // Here you would typically:
-      // 1. Upload images to storage
-      // 2. Create property listing in database
-      // 3. Associate property with landlord
-      
-      console.log('Form data:', { ...data, amenities });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      navigate('/dashboard/landlord');
-    } catch (error) {
-      console.error('Error adding property:', error);
+      navigate('/dashboard/landlord/my-properties');
+    } catch (err: any) {
+      console.error('Error adding property:', err);
+      setError(err.message || 'Failed to add property. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -78,6 +129,12 @@ const AddPropertyPage: React.FC = () => {
           List your property to reach thousands of potential student tenants.
         </p>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg bg-error-DEFAULT/10 p-4 text-error-DEFAULT">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information */}
@@ -238,7 +295,6 @@ const AddPropertyPage: React.FC = () => {
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageChange}
-                  {...register('images')}
                 />
               </label>
             </div>
@@ -254,7 +310,7 @@ const AddPropertyPage: React.FC = () => {
                     />
                     <button
                       type="button"
-                      onClick={() => setPreviewImages(previewImages.filter((_, i) => i !== index))}
+                      onClick={() => handleRemoveImage(index)}
                       className="absolute right-1 top-1 rounded-full bg-error-DEFAULT p-1 text-background hover:bg-error-dark"
                     >
                       <Minus size={14} />
@@ -271,7 +327,7 @@ const AddPropertyPage: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/dashboard/landlord')}
+            onClick={() => navigate('/dashboard/landlord/my-properties')}
           >
             Cancel
           </Button>
