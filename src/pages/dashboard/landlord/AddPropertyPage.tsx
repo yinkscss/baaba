@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Building, Upload, Plus, Minus, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from '@types/uuid';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
