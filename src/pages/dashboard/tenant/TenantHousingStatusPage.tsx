@@ -2,8 +2,35 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { Building, Phone, Calendar, Download } from 'lucide-react';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../context/AuthContext';
+import { useCurrentLease } from '../../../hooks/useDashboard';
+import { formatCurrency } from '../../../lib/utils';
 
 const TenantHousingStatusPage: React.FC = () => {
+  const { user } = useAuth();
+  const { data: lease, isLoading } = useCurrentLease(user?.id || '');
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!lease) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center">
+        <h2 className="mb-2 text-xl font-semibold text-text-primary">No Active Lease</h2>
+        <p className="text-text-secondary">You don't have any active leases at the moment.</p>
+      </div>
+    );
+  }
+
+  const daysRemaining = Math.ceil(
+    (new Date(lease.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -25,16 +52,18 @@ const TenantHousingStatusPage: React.FC = () => {
               <div className="flex items-start gap-3">
                 <Building className="mt-1 h-5 w-5 text-accent-blue" />
                 <div>
-                  <h3 className="font-medium text-text-primary">Modern Studio Near University of Lagos</h3>
-                  <p className="text-sm text-text-secondary">123 University Road, Yaba, Lagos</p>
+                  <h3 className="font-medium text-text-primary">{lease.property?.title}</h3>
+                  <p className="text-sm text-text-secondary">{lease.property?.address}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-accent-blue" />
                 <div>
                   <p className="text-sm text-text-secondary">Landlord Contact</p>
-                  <p className="font-medium text-text-primary">Mr. Oluwaseun Adebayo</p>
-                  <p className="text-sm text-text-secondary">+234 801 234 5678</p>
+                  <p className="font-medium text-text-primary">
+                    {lease.landlordContact?.firstName} {lease.landlordContact?.lastName}
+                  </p>
+                  <p className="text-sm text-text-secondary">{lease.landlordContact?.phoneNumber}</p>
                 </div>
               </div>
             </div>
@@ -51,14 +80,22 @@ const TenantHousingStatusPage: React.FC = () => {
                 <Calendar className="h-5 w-5 text-accent-blue" />
                 <div>
                   <p className="text-sm text-text-secondary">Lease Duration</p>
-                  <p className="font-medium text-text-primary">Sept 1, 2023 - Aug 31, 2024</p>
-                  <p className="text-sm text-accent-blue">245 days remaining</p>
+                  <p className="font-medium text-text-primary">
+                    {new Date(lease.startDate).toLocaleDateString()} - {new Date(lease.endDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-accent-blue">{daysRemaining} days remaining</p>
                 </div>
               </div>
-              <Button variant="outline" className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Download Lease Agreement
-              </Button>
+              {lease.leaseDocumentUrl && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open(lease.leaseDocumentUrl, '_blank')}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Lease Agreement
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

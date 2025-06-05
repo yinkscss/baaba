@@ -3,13 +3,40 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { MessageSquare, AlertTriangle, CheckCircle, Clock, Star } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import { useAuth } from '../../../context/AuthContext';
+import { useComplaints } from '../../../hooks/useDashboard';
+import type { Complaint } from '../../../types';
 
 const TenantComplaintSystemPage: React.FC = () => {
+  const { user } = useAuth();
+  const { data: complaints, isLoading, submitComplaint } = useComplaints(user?.id || '');
   const [newComplaint, setNewComplaint] = useState({
     subject: '',
     description: '',
-    category: 'maintenance'
+    category: 'maintenance' as Complaint['category']
   });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await submitComplaint.mutateAsync({
+        ...newComplaint,
+        status: 'open',
+        priority: 'medium'
+      });
+      setNewComplaint({ subject: '', description: '', category: 'maintenance' });
+    } catch (error) {
+      console.error('Failed to submit complaint:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -27,7 +54,7 @@ const TenantComplaintSystemPage: React.FC = () => {
           <CardTitle>New Complaint</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <Input
               label="Subject"
               placeholder="e.g., Leaking roof, No electricity"
@@ -42,12 +69,12 @@ const TenantComplaintSystemPage: React.FC = () => {
               <select
                 className="w-full rounded-md border border-nav bg-background px-3 py-2 text-text-primary"
                 value={newComplaint.category}
-                onChange={(e) => setNewComplaint({ ...newComplaint, category: e.target.value })}
+                onChange={(e) => setNewComplaint({ ...newComplaint, category: e.target.value as Complaint['category'] })}
               >
                 <option value="maintenance">Maintenance</option>
-                <option value="utilities">Utilities</option>
-                <option value="security">Security</option>
                 <option value="noise">Noise</option>
+                <option value="billing">Billing</option>
+                <option value="security">Security</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -65,7 +92,11 @@ const TenantComplaintSystemPage: React.FC = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button 
+              type="submit" 
+              className="w-full"
+              isLoading={submitComplaint.isLoading}
+            >
               Submit Complaint
             </Button>
           </form>
@@ -78,24 +109,7 @@ const TenantComplaintSystemPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[
-              {
-                id: '1',
-                subject: 'Leaking Roof',
-                description: 'Water is leaking from the ceiling in the living room',
-                status: 'in_progress',
-                category: 'maintenance',
-                created_at: '2024-02-15T10:00:00Z'
-              },
-              {
-                id: '2',
-                subject: 'No Electricity',
-                description: 'Power has been out for 24 hours',
-                status: 'resolved',
-                category: 'utilities',
-                created_at: '2024-02-10T15:30:00Z'
-              }
-            ].map((complaint) => (
+            {complaints?.map((complaint) => (
               <div
                 key={complaint.id}
                 className="rounded-lg border border-nav p-4"
@@ -123,7 +137,7 @@ const TenantComplaintSystemPage: React.FC = () => {
                   </div>
                 </div>
                 <p className="mb-4 text-sm text-text-secondary">{complaint.description}</p>
-                {complaint.status === 'resolved' && (
+                {complaint.status === 'resolved' && !complaint.rating && (
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-warning-DEFAULT" />
                     <span className="text-sm text-text-secondary">Rate Resolution</span>
@@ -131,6 +145,9 @@ const TenantComplaintSystemPage: React.FC = () => {
                 )}
               </div>
             ))}
+            {complaints?.length === 0 && (
+              <p className="text-center text-text-secondary">No complaints submitted yet</p>
+            )}
           </div>
         </CardContent>
       </Card>
