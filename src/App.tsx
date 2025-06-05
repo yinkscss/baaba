@@ -37,6 +37,7 @@ import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequestsPage';
 import EscrowManagementPage from './pages/dashboard/landlord/EscrowManagementPage';
 import MyPropertiesPage from './pages/dashboard/landlord/MyPropertiesPage';
+import LandlordPaymentsPage from './pages/dashboard/landlord/LandlordPaymentsPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' | 'agent' }) {
   const { user, loading } = useAuth();
@@ -227,6 +228,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="landlord">
               <EscrowManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/landlord/payments" 
+          element={
+            <ProtectedRoute requiredRole="landlord">
+              <LandlordPaymentsPage />
             </ProtectedRoute>
           } 
         />
