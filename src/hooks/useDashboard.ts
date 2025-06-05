@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import type { 
   DashboardStats, Notification, Activity, 
-  Lease, Payment, Complaint, User 
+  Lease, Payment, Complaint, User,
+  InspectionRequest, EscrowTransaction
 } from '../types';
 
 export function useDashboardStats(userId: string) {
@@ -432,5 +433,159 @@ export function useUserProfile(userId: string) {
   return {
     ...query,
     updateProfile
+  };
+}
+
+export function useInspectionRequests(propertyId?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['inspectionRequests', propertyId],
+    queryFn: async () => {
+      let query = supabase
+        .from('inspection_requests')
+        .select(`
+          id,
+          property_id,
+          tenant_id,
+          requested_date,
+          message,
+          status,
+          created_at,
+          updated_at,
+          properties!property_id (
+            id,
+            title,
+            address
+          ),
+          users!tenant_id (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            school_id_verified,
+            phone_verified
+          )
+        `);
+
+      if (propertyId) {
+        query = query.eq('property_id', propertyId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(request => ({
+        id: request.id,
+        propertyId: request.property_id,
+        tenantId: request.tenant_id,
+        requestedDate: request.requested_date,
+        message: request.message,
+        status: request.status,
+        createdAt: request.created_at,
+        updatedAt: request.updated_at,
+        property: request.properties,
+        tenant: {
+          id: request.users.id,
+          firstName: request.users.first_name,
+          lastName: request.users.last_name,
+          email: request.users.email,
+          phoneNumber: request.users.phone_number,
+          schoolIdVerified: request.users.school_id_verified,
+          phoneVerified: request.users.phone_verified
+        }
+      })) as InspectionRequest[];
+    }
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ requestId, status }: { requestId: string; status: InspectionRequest['status'] }) => {
+      const { error } = await supabase
+        .from('inspection_requests')
+        .update({ status })
+        .eq('id', requestId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspectionRequests'] });
+    }
+  });
+
+  return {
+    ...query,
+    updateStatus
+  };
+}
+
+export function useEscrowTransactions(leaseId?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['escrowTransactions', leaseId],
+    queryFn: async () => {
+      let query = supabase
+        .from('escrow_transactions')
+        .select(`
+          id,
+          lease_id,
+          amount,
+          status,
+          initiated_at,
+          released_at,
+          created_at,
+          updated_at,
+          leases!lease_id (
+            id,
+            user_id,
+            property_id,
+            rent_amount
+          )
+        `);
+
+      if (leaseId) {
+        query = query.eq('lease_id', leaseId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(transaction => ({
+        id: transaction.id,
+        leaseId: transaction.lease_id,
+        amount: transaction.amount,
+        status: transaction.status,
+        initiatedAt: transaction.initiated_at,
+        releasedAt: transaction.released_at,
+        createdAt: transaction.created_at,
+        updatedAt: transaction.updated_at,
+        lease: transaction.leases
+      })) as EscrowTransaction[];
+    }
+  });
+
+  const releaseFunds = useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase
+        .from('escrow_transactions')
+        .update({
+          status: 'released',
+          released_at: new Date().toISOString()
+        })
+        .eq('id', transactionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escrowTransactions'] });
+    }
+  });
+
+  return {
+    ...query,
+    releaseFunds
   };
 }
