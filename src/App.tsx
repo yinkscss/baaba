@@ -24,6 +24,7 @@ import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
 import TenantHousingStatusPage from './pages/dashboard/tenant/TenantHousingStatusPage';
 import TenantPaymentCenterPage from './pages/dashboard/tenant/TenantPaymentCenterPage';
 import TenantPropertiesPage from './pages/dashboard/tenant/TenantPropertiesPage';
+import TenantPropertyDetailPage from './pages/dashboard/tenant/TenantPropertyDetailPage';
 import TenantRoommateMatchingPage from './pages/dashboard/tenant/TenantRoommateMatchingPage';
 import TenantLegalAssistantPage from './pages/dashboard/tenant/TenantLegalAssistantPage';
 import TenantComplaintSystemPage from './pages/dashboard/tenant/TenantComplaintSystemPage';
@@ -133,6 +134,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="tenant">
               <TenantPropertiesPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/properties/:id" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantPropertyDetailPage />
             </ProtectedRoute>
           } 
         />
