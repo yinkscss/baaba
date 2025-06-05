@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import type { 
   DashboardStats, Notification, Activity, 
   Lease, Payment, Complaint, User,
-  InspectionRequest, EscrowTransaction
+  InspectionRequest, EscrowTransaction, Property
 } from '../types';
 
 export function useDashboardStats(userId: string) {
@@ -587,5 +587,61 @@ export function useEscrowTransactions(leaseId?: string) {
   return {
     ...query,
     releaseFunds
+  };
+}
+
+export function useLandlordProperties(landlordId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['landlordProperties', landlordId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('landlord_id', landlordId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(property => ({
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        price: property.price,
+        location: property.location,
+        address: property.address,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        size: property.size,
+        amenities: property.amenities,
+        images: property.images,
+        landlordId: property.landlord_id,
+        createdAt: property.created_at,
+        updatedAt: property.updated_at,
+        available: property.available,
+        featured: property.featured,
+        status: property.status
+      })) as Property[];
+    }
+  });
+
+  const updatePropertyStatus = useMutation({
+    mutationFn: async ({ propertyId, status }: { propertyId: string; status: Property['status'] }) => {
+      const { error } = await supabase
+        .from('properties')
+        .update({ status })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landlordProperties'] });
+    }
+  });
+
+  return {
+    ...query,
+    updatePropertyStatus
   };
 }

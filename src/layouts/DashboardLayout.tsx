@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Settings, LogOut, Users, Building, FileText, 
   CreditCard, ChevronDown, User as UserIcon,
-  Home, Plus, Bell, Key, MessageSquare, DollarSign
+  Home, Plus, Bell, Key, MessageSquare, DollarSign,
+  LayoutGrid
 } from 'lucide-react';
 import { ExpandableTabs } from '../components/ui/expandable-tabs';
 
@@ -40,7 +41,7 @@ const DashboardLayout: React.FC = () => {
       ]
     : [
         { title: 'Dashboard', icon: Home },
-        { title: 'My Properties', icon: Building },
+        { title: 'My Properties', icon: LayoutGrid },
         { type: 'separator' as const },
         { title: 'Add Property', icon: Plus },
         { title: 'Inspection Requests', icon: Bell },
@@ -64,7 +65,7 @@ const DashboardLayout: React.FC = () => {
       'Complaints': '/dashboard/tenant/complaints'
     } : {
       'Dashboard': '/dashboard/landlord',
-      'My Properties': '/dashboard/landlord',
+      'My Properties': '/dashboard/landlord/my-properties',
       'Add Property': '/dashboard/landlord/add-property',
       'Inspection Requests': '/dashboard/landlord/inspection-requests',
       'Escrow': '/dashboard/landlord/escrow',
