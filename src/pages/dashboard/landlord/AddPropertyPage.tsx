@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Building, Upload, Plus, Minus, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { v4 as uuidv4 } from 'uuid';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
-import { useAuth } from '../../../context/AuthContext';
-import { supabase } from '../../../lib/supabase';
 
 interface PropertyFormData {
   title: string;
@@ -25,14 +22,13 @@ interface PropertyFormData {
 
 const AddPropertyPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [amenities, setAmenities] = useState<string[]>([]);
   const [newAmenity, setNewAmenity] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImages, setPreviewImages] = useState<{ file: File; preview: string }[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
   
-  const { register, handleSubmit, formState: { errors } } = useForm<PropertyFormData>();
-
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<PropertyFormData>();
+  
   const handleAddAmenity = () => {
     if (newAmenity.trim() && !amenities.includes(newAmenity.trim())) {
       setAmenities([...amenities, newAmenity.trim()]);
@@ -47,68 +43,28 @@ const AddPropertyPage: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map(file => ({
-        file,
-        preview: URL.createObjectURL(file)
-      }));
-      setPreviewImages([...previewImages, ...newImages]);
+      const newPreviewUrls = Array.from(files).map(file => URL.createObjectURL(file));
+      setPreviewImages([...previewImages, ...newPreviewUrls]);
     }
-  };
-
-  const uploadImages = async (files: File[]): Promise<string[]> => {
-    const uploadPromises = files.map(async (file) => {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${user?.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    });
-
-    return Promise.all(uploadPromises);
   };
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
       setIsSubmitting(true);
-
-      // Upload images first
-      const imageFiles = previewImages.map(img => img.file);
-      const imageUrls = await uploadImages(imageFiles);
-
-      // Create property listing
-      const { error: insertError } = await supabase
-        .from('properties')
-        .insert({
-          title: data.title,
-          description: data.description,
-          price: data.price,
-          location: data.location,
-          address: data.address,
-          bedrooms: data.bedrooms,
-          bathrooms: data.bathrooms,
-          size: data.size,
-          amenities,
-          images: imageUrls,
-          landlord_id: user?.id,
-          status: 'active'
-        });
-
-      if (insertError) throw insertError;
-
-      navigate('/dashboard/landlord/my-properties');
+      
+      // Here you would typically:
+      // 1. Upload images to storage
+      // 2. Create property listing in database
+      // 3. Associate property with landlord
+      
+      console.log('Form data:', { ...data, amenities });
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      navigate('/dashboard/landlord');
     } catch (error) {
       console.error('Error adding property:', error);
-      // Handle error (show error message to user)
     } finally {
       setIsSubmitting(false);
     }
@@ -117,9 +73,9 @@ const AddPropertyPage: React.FC = () => {
   return (
     <div className="container mx-auto max-w-4xl px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary">Add Property</h1>
+        <h1 className="text-3xl font-bold text-text-primary">Add New Property</h1>
         <p className="mt-2 text-text-secondary">
-          List your property
+          List your property to reach thousands of potential student tenants.
         </p>
       </div>
 
@@ -127,15 +83,15 @@ const AddPropertyPage: React.FC = () => {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Property Details</CardTitle>
+            <CardTitle>Basic Information</CardTitle>
             <CardDescription>
-              Basic information about your property
+              Provide the essential details about your property.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              label="Title"
-              placeholder="Property title"
+              label="Property Title"
+              placeholder="e.g., Modern Studio Near University of Lagos"
               error={errors.title?.message}
               {...register('title', { required: 'Title is required' })}
             />
@@ -147,7 +103,7 @@ const AddPropertyPage: React.FC = () => {
               <textarea
                 className="w-full rounded-md border border-nav bg-background px-3 py-2 text-text-primary placeholder-text-muted focus:border-accent-blue focus:outline-none"
                 rows={4}
-                placeholder="Property description"
+                placeholder="Describe your property..."
                 {...register('description', { required: 'Description is required' })}
               />
               {errors.description && (
@@ -157,9 +113,9 @@ const AddPropertyPage: React.FC = () => {
 
             <div className="grid gap-4 md:grid-cols-2">
               <Input
-                label="Price"
+                label="Price per Year (₦)"
                 type="number"
-                placeholder="Monthly rent"
+                placeholder="Enter price"
                 error={errors.price?.message}
                 {...register('price', { required: 'Price is required' })}
               />
@@ -175,7 +131,7 @@ const AddPropertyPage: React.FC = () => {
 
             <div className="grid gap-4 md:grid-cols-2">
               <Input
-                label="Bedrooms"
+                label="Number of Bedrooms"
                 type="number"
                 placeholder="Number of bedrooms"
                 error={errors.bedrooms?.message}
@@ -183,7 +139,7 @@ const AddPropertyPage: React.FC = () => {
               />
               
               <Input
-                label="Bathrooms"
+                label="Number of Bathrooms"
                 type="number"
                 placeholder="Number of bathrooms"
                 error={errors.bathrooms?.message}
@@ -197,19 +153,21 @@ const AddPropertyPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Location</CardTitle>
-            <CardDescription>Property location details</CardDescription>
+            <CardDescription>
+              Specify where your property is located.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
               label="Location"
-              placeholder="Area or neighborhood"
+              placeholder="e.g., Yaba, Lagos"
               error={errors.location?.message}
               {...register('location', { required: 'Location is required' })}
             />
             
             <Input
-              label="Address"
-              placeholder="Full address"
+              label="Full Address"
+              placeholder="Enter the complete address"
               error={errors.address?.message}
               {...register('address', { required: 'Address is required' })}
             />
@@ -220,12 +178,14 @@ const AddPropertyPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Amenities</CardTitle>
-            <CardDescription>Available features</CardDescription>
+            <CardDescription>
+              List the features and amenities available in your property.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex space-x-2">
               <Input
-                placeholder="Add amenity"
+                placeholder="Add an amenity (e.g., Wi-Fi, Security)"
                 value={newAmenity}
                 onChange={(e) => setNewAmenity(e.target.value)}
               />
@@ -262,8 +222,10 @@ const AddPropertyPage: React.FC = () => {
         {/* Images */}
         <Card>
           <CardHeader>
-            <CardTitle>Images</CardTitle>
-            <CardDescription>Upload property images</CardDescription>
+            <CardTitle>Property Images</CardTitle>
+            <CardDescription>
+              Upload high-quality images of your property. You can upload multiple images.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
@@ -276,16 +238,17 @@ const AddPropertyPage: React.FC = () => {
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageChange}
+                  {...register('images')}
                 />
               </label>
             </div>
 
             {previewImages.length > 0 && (
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {previewImages.map((img, index) => (
+                {previewImages.map((url, index) => (
                   <div key={index} className="relative aspect-video overflow-hidden rounded-lg">
                     <img
-                      src={img.preview}
+                      src={url}
                       alt={`Preview ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
@@ -308,7 +271,7 @@ const AddPropertyPage: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/dashboard/landlord/my-properties')}
+            onClick={() => navigate('/dashboard/landlord')}
           >
             Cancel
           </Button>
