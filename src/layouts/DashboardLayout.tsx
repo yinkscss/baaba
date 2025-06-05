@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Settings, LogOut, Users, Building, FileText, 
   CreditCard, ChevronDown, User as UserIcon,
-  Home, Plus, Bell
+  Home, Plus, Bell, Key, MessageSquare
 } from 'lucide-react';
 import { LogoIcon } from '../components/icons/LogoIcon';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,11 +31,14 @@ const DashboardLayout: React.FC = () => {
   const dashboardNavItems = isTenant
     ? [
         { title: 'Dashboard', icon: Home },
-        { title: 'Properties', icon: Building },
+        { title: 'Housing Status', icon: Key },
         { type: 'separator' as const },
+        { title: 'Payments', icon: CreditCard },
+        { title: 'Properties', icon: Building },
         { title: 'Roommates', icon: Users },
+        { type: 'separator' as const },
         { title: 'Legal Assistant', icon: FileText },
-        { title: 'Subscription', icon: CreditCard },
+        { title: 'Complaints', icon: MessageSquare },
       ]
     : [
         { title: 'Dashboard', icon: Home },
@@ -54,10 +57,12 @@ const DashboardLayout: React.FC = () => {
 
     const pathMap = isTenant ? {
       'Dashboard': '/dashboard/tenant',
-      'Properties': '/properties',
+      'Housing Status': '/dashboard/tenant/housing-status',
+      'Payments': '/dashboard/tenant/payments',
+      'Properties': '/dashboard/tenant/properties',
       'Roommates': '/dashboard/tenant/roommate-matching',
       'Legal Assistant': '/dashboard/tenant/legal-assistant',
-      'Subscription': '/subscription'
+      'Complaints': '/dashboard/tenant/complaints'
     } : {
       'Dashboard': '/dashboard/landlord',
       'My Properties': '/dashboard/landlord',
@@ -123,7 +128,7 @@ const DashboardLayout: React.FC = () => {
                 >
                   <div className="py-1">
                     <Link 
-                      to="/settings" 
+                      to={`/dashboard/${isTenant ? 'tenant' : 'landlord'}/settings`}
                       className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-nav hover:text-text-primary"
                       onClick={() => setIsProfileDropdownOpen(false)}
                     >

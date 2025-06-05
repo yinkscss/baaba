@@ -19,11 +19,17 @@ import LegalAssistantPage from './pages/legal/LegalAssistantPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Dashboard Pages
+// Tenant Dashboard Pages
 import TenantDashboardPage from './pages/dashboard/tenant/TenantDashboardPage';
+import TenantHousingStatusPage from './pages/dashboard/tenant/TenantHousingStatusPage';
+import TenantPaymentCenterPage from './pages/dashboard/tenant/TenantPaymentCenterPage';
 import TenantPropertiesPage from './pages/dashboard/tenant/TenantPropertiesPage';
 import TenantRoommateMatchingPage from './pages/dashboard/tenant/TenantRoommateMatchingPage';
 import TenantLegalAssistantPage from './pages/dashboard/tenant/TenantLegalAssistantPage';
+import TenantComplaintSystemPage from './pages/dashboard/tenant/TenantComplaintSystemPage';
+import TenantSettingsPage from './pages/dashboard/tenant/TenantSettingsPage';
+
+// Landlord Dashboard Pages
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
@@ -107,6 +113,22 @@ function App() {
           } 
         />
         <Route 
+          path="/dashboard/tenant/housing-status" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantHousingStatusPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/payments" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantPaymentCenterPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/dashboard/tenant/properties" 
           element={
             <ProtectedRoute requiredRole="tenant">
@@ -127,6 +149,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="tenant">
               <TenantLegalAssistantPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/complaints" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantComplaintSystemPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/tenant/settings" 
+          element={
+            <ProtectedRoute requiredRole="tenant">
+              <TenantSettingsPage />
             </ProtectedRoute>
           } 
         />
