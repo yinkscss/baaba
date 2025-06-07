@@ -64,6 +64,16 @@ export interface VerificationRequest {
   };
 }
 
+// Add ManagedLandlord type
+export interface ManagedLandlord {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  verified: boolean;
+}
+
 export function useDashboardStats(userId: string) {
   const queryClient = useQueryClient();
 
@@ -1082,6 +1092,41 @@ export function useVerificationRequests() {
     ...query,
     updateVerificationStatus
   };
+}
+
+// New hook for managed landlords (for agents)
+export function useManagedLandlords(agentId: string) {
+  return useQuery({
+    queryKey: ['managedLandlords', agentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('agent_landlords')
+        .select(`
+          landlord_id,
+          users!landlord_id (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            verified
+          )
+        `)
+        .eq('agent_id', agentId);
+
+      if (error) throw error;
+
+      return data.map(item => ({
+        id: item.users.id,
+        firstName: item.users.first_name,
+        lastName: item.users.last_name,
+        email: item.users.email,
+        phoneNumber: item.users.phone_number,
+        verified: item.users.verified
+      })) as ManagedLandlord[];
+    },
+    enabled: !!agentId
+  });
 }
 
 // New hooks for messaging functionality
