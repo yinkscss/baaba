@@ -239,7 +239,47 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        {/* Agent-specific routes */}
+        <Route 
+          path="/dashboard/agent/managed-properties" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <MyPropertiesPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/agent/inspection-requests" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <InspectionRequestsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/agent/escrow" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <EscrowManagementPage />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
+
+      {/* Default dashboard redirect */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <Navigate to={
+            user?.role === 'tenant' 
+              ? '/dashboard/tenant' 
+              : user?.role === 'agent'
+              ? '/dashboard/agent'
+              : '/dashboard/landlord'
+          } />
+        } 
+      />
 
       {/* 404 page */}
       <Route path="*" element={<NotFoundPage />} />

@@ -5,7 +5,7 @@ import {
   Settings, LogOut, Users, Building, FileText, 
   CreditCard, ChevronDown, User as UserIcon,
   Home, Plus, Bell, Key, MessageSquare, DollarSign,
-  LayoutGrid
+  LayoutGrid, Shield, UserCheck
 } from 'lucide-react';
 import { ExpandableTabs } from '../components/ui/expandable-tabs';
 
@@ -26,7 +26,10 @@ const DashboardLayout: React.FC = () => {
   };
 
   const isTenant = user?.role === 'tenant';
+  const isAgent = user?.role === 'agent';
+  const isLandlord = user?.role === 'landlord';
 
+  // Define navigation items based on user role
   const dashboardNavItems = isTenant
     ? [
         { title: 'Dashboard', icon: Home },
@@ -38,6 +41,19 @@ const DashboardLayout: React.FC = () => {
         { type: 'separator' as const },
         { title: 'Legal Assistant', icon: FileText },
         { title: 'Complaints', icon: MessageSquare },
+      ]
+    : isAgent
+    ? [
+        { title: 'Dashboard', icon: Home },
+        { title: 'Managed Properties', icon: LayoutGrid },
+        { type: 'separator' as const },
+        { title: 'Add Property', icon: Plus },
+        { title: 'Inspection Requests', icon: Bell },
+        { title: 'Escrow', icon: DollarSign },
+        { type: 'separator' as const },
+        { title: 'Commissions', icon: CreditCard },
+        { title: 'Verification', icon: UserCheck },
+        { title: 'Messages', icon: MessageSquare },
       ]
     : [
         { title: 'Dashboard', icon: Home },
@@ -55,7 +71,8 @@ const DashboardLayout: React.FC = () => {
     const tab = dashboardNavItems[index];
     if (tab.type === 'separator') return;
 
-    const pathMap = isTenant ? {
+    // Define path mappings for each role
+    const tenantPathMap = {
       'Dashboard': '/dashboard/tenant',
       'Housing Status': '/dashboard/tenant/housing-status',
       'Payments': '/dashboard/tenant/payments',
@@ -63,7 +80,20 @@ const DashboardLayout: React.FC = () => {
       'Roommates': '/dashboard/tenant/roommate-matching',
       'Legal Assistant': '/dashboard/tenant/legal-assistant',
       'Complaints': '/dashboard/tenant/complaints'
-    } : {
+    };
+
+    const agentPathMap = {
+      'Dashboard': '/dashboard/agent',
+      'Managed Properties': '/dashboard/agent/managed-properties',
+      'Add Property': '/dashboard/landlord/add-property', // Reuse landlord's add property
+      'Inspection Requests': '/dashboard/agent/inspection-requests',
+      'Escrow': '/dashboard/agent/escrow',
+      'Commissions': '/dashboard/agent/commissions',
+      'Verification': '/dashboard/agent/verification',
+      'Messages': '/dashboard/agent/messages'
+    };
+
+    const landlordPathMap = {
       'Dashboard': '/dashboard/landlord',
       'My Properties': '/dashboard/landlord/my-properties',
       'Add Property': '/dashboard/landlord/add-property',
@@ -71,6 +101,15 @@ const DashboardLayout: React.FC = () => {
       'Escrow': '/dashboard/landlord/escrow',
       'Payments': '/dashboard/landlord/payments'
     };
+
+    let pathMap;
+    if (isTenant) {
+      pathMap = tenantPathMap;
+    } else if (isAgent) {
+      pathMap = agentPathMap;
+    } else {
+      pathMap = landlordPathMap;
+    }
 
     const path = pathMap[tab.title];
     if (path) {
@@ -121,7 +160,7 @@ const DashboardLayout: React.FC = () => {
               <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-card shadow-lg ring-1 ring-nav focus:outline-none">
                 <div className="py-1">
                   <Link 
-                    to={`/dashboard/${isTenant ? 'tenant' : 'landlord'}/settings`}
+                    to={`/dashboard/${isTenant ? 'tenant' : isAgent ? 'agent' : 'landlord'}/settings`}
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-nav hover:text-text-primary"
                     onClick={() => setIsProfileDropdownOpen(false)}
                   >
