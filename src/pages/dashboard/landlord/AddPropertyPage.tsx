@@ -8,7 +8,6 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/Card';
 import { useAuth } from '../../../context/AuthContext';
-import { useManagedLandlords } from '../../../hooks/useDashboard';
 import { supabase } from '../../../lib/supabase';
 
 interface PropertyFormData {
@@ -22,7 +21,6 @@ interface PropertyFormData {
   size: number;
   amenities: string[];
   images: FileList;
-  landlordId?: string; // For agents to select landlord
 }
 
 const AddPropertyPage: React.FC = () => {
@@ -34,12 +32,6 @@ const AddPropertyPage: React.FC = () => {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLandlordId, setSelectedLandlordId] = useState<string>('');
-  
-  // Fetch managed landlords if user is an agent
-  const { data: managedLandlords, isLoading: loadingLandlords } = useManagedLandlords(
-    user?.role === 'agent' ? user.id : ''
-  );
   
   const { register, handleSubmit, formState: { errors }, watch } = useForm<PropertyFormData>();
   
@@ -97,19 +89,10 @@ const AddPropertyPage: React.FC = () => {
       setIsSubmitting(true);
       setError(null);
 
-      // Validate landlord selection for agents
-      if (user?.role === 'agent' && !selectedLandlordId) {
-        setError('Please select a landlord for this property.');
-        return;
-      }
-
       // Upload images
       const imageUrls = await uploadImages(selectedFiles);
 
-      // Determine the landlord ID
-      const landlordId = user?.role === 'agent' ? selectedLandlordId : user?.id;
-
-      // Create property listing
+      // Create property listing - agent's user ID is automatically assigned as landlord_id
       const { error: insertError } = await supabase
         .from('properties')
         .insert({
@@ -123,7 +106,7 @@ const AddPropertyPage: React.FC = () => {
           size: data.size,
           amenities,
           images: imageUrls,
-          landlord_id: landlordId,
+          landlord_id: user?.id, // Agent's own ID is used as landlord_id
           status: 'active'
         });
 
@@ -143,21 +126,13 @@ const AddPropertyPage: React.FC = () => {
     }
   };
 
-  if (user?.role === 'agent' && loadingLandlords) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto max-w-4xl px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary">Add New Property</h1>
         <p className="mt-2 text-text-secondary">
           {user?.role === 'agent' 
-            ? 'List a property for one of your managed landlords.'
+            ? 'List a property that you own.'
             : 'List your property to reach thousands of potential student tenants.'
           }
         </p>
@@ -170,44 +145,6 @@ const AddPropertyPage: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Landlord Selection (for agents only) */}
-        {user?.role === 'agent' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Owner</CardTitle>
-              <CardDescription>
-                Select the landlord who owns this property.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text-primary">
-                  Select Landlord *
-                </label>
-                <select
-                  className="w-full rounded-md border border-nav bg-background px-3 py-2 text-text-primary"
-                  value={selectedLandlordId}
-                  onChange={(e) => setSelectedLandlordId(e.target.value)}
-                  required
-                >
-                  <option value="">Choose a landlord...</option>
-                  {managedLandlords?.map((landlord) => (
-                    <option key={landlord.id} value={landlord.id}>
-                      {landlord.firstName} {landlord.lastName} ({landlord.email})
-                      {landlord.verified && ' ✓'}
-                    </option>
-                  ))}
-                </select>
-                {managedLandlords?.length === 0 && (
-                  <p className="mt-2 text-sm text-text-secondary">
-                    No managed landlords found. Please contact your administrator.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Basic Information */}
         <Card>
           <CardHeader>
