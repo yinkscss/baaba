@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 import type { 
   DashboardStats, Notification, Activity, 
   Lease, Payment, Complaint, User,
-  InspectionRequest, EscrowTransaction, Property
+  InspectionRequest, EscrowTransaction, Property,
+  Conversation, Message, ConversationParticipant
 } from '../types';
 
 // Add Commission type
@@ -982,5 +983,234 @@ export function useVerificationRequests() {
   return {
     ...query,
     updateVerificationStatus
+  };
+}
+
+// New hooks for messaging functionality
+export function useConversations(userId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['conversations', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          created_at,
+          updated_at,
+          conversation_participants!inner (
+            user_id,
+            joined_at,
+            users (
+              id,
+              first_name,
+              last_name,
+              email,
+              role,
+              profile_image
+            )
+          )
+        `)
+        .eq('conversation_participants.user_id', userId)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Get last message for each conversation
+      const conversationsWithMessages = await Promise.all(
+        data.map(async (conversation) => {
+          const { data: lastMessage } = await supabase
+            .from('messages')
+            .select(`
+              id,
+              content,
+              created_at,
+              sender_id,
+              read,
+              users!sender_id (
+                first_name,
+                last_name
+              )
+            `)
+            .eq('conversation_id', conversation.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          // Get unread count
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conversation.id)
+            .eq('read', false)
+            .neq('sender_id', userId);
+
+          return {
+            id: conversation.id,
+            createdAt: conversation.created_at,
+            updatedAt: conversation.updated_at,
+            participants: conversation.conversation_participants.map(p => ({
+              conversationId: conversation.id,
+              userId: p.user_id,
+              joinedAt: p.joined_at,
+              user: p.users ? {
+                id: p.users.id,
+                firstName: p.users.first_name,
+                lastName: p.users.last_name,
+                email: p.users.email,
+                role: p.users.role,
+                profileImage: p.users.profile_image
+              } : undefined
+            })),
+            lastMessage: lastMessage ? {
+              id: lastMessage.id,
+              content: lastMessage.content,
+              createdAt: lastMessage.created_at,
+              senderId: lastMessage.sender_id,
+              read: lastMessage.read,
+              sender: lastMessage.users ? {
+                firstName: lastMessage.users.first_name,
+                lastName: lastMessage.users.last_name
+              } : undefined
+            } : undefined,
+            unreadCount: unreadCount || 0
+          } as Conversation;
+        })
+      );
+
+      return conversationsWithMessages;
+    }
+  });
+
+  const createConversation = useMutation({
+    mutationFn: async (participantIds: string[]) => {
+      // Create conversation
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert({})
+        .select()
+        .single();
+
+      if (conversationError) throw conversationError;
+
+      // Add participants
+      const participants = participantIds.map(userId => ({
+        conversation_id: conversation.id,
+        user_id: userId
+      }));
+
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert(participants);
+
+      if (participantsError) throw participantsError;
+
+      return conversation;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
+    }
+  });
+
+  return {
+    ...query,
+    createConversation
+  };
+}
+
+export function useMessages(conversationId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          created_at,
+          read,
+          users!sender_id (
+            id,
+            first_name,
+            last_name,
+            profile_image
+          )
+        `)
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return data.map(message => ({
+        id: message.id,
+        conversationId: message.conversation_id,
+        senderId: message.sender_id,
+        content: message.content,
+        createdAt: message.created_at,
+        read: message.read,
+        sender: message.users ? {
+          id: message.users.id,
+          firstName: message.users.first_name,
+          lastName: message.users.last_name,
+          profileImage: message.users.profile_image
+        } : undefined
+      })) as Message[];
+    },
+    enabled: !!conversationId
+  });
+
+  const sendMessage = useMutation({
+    mutationFn: async ({ content, senderId }: { content: string; senderId: string }) => {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: senderId,
+          content
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+
+  const markAsRead = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+
+  return {
+    ...query,
+    sendMessage,
+    markAsRead
   };
 }

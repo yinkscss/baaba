@@ -94,3 +94,30 @@ export interface EscrowTransaction {
   updatedAt: string;
   lease?: Lease;
 }
+
+// New message-related types
+export interface Conversation {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  participants: ConversationParticipant[];
+  lastMessage?: Message;
+  unreadCount?: number;
+}
+
+export interface ConversationParticipant {
+  conversationId: string;
+  userId: string;
+  joinedAt: string;
+  user?: User;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  read: boolean;
+  sender?: User;
+}

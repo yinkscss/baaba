@@ -35,6 +35,7 @@ import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardP
 import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import CommissionsPage from './pages/dashboard/agent/CommissionsPage';
 import VerificationQueuePage from './pages/dashboard/agent/VerificationQueuePage';
+import MessagesPage from './pages/dashboard/agent/MessagesPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequestsPage';
 import EscrowManagementPage from './pages/dashboard/landlord/EscrowManagementPage';
@@ -222,6 +223,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="agent">
               <VerificationQueuePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/agent/messages" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <MessagesPage />
             </ProtectedRoute>
           } 
         />
