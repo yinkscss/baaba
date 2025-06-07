@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .from('users')
             .select('*')
             .eq('id', sessionData.session.user.id)
-            .single();
+            .maybeSingle();
           
           if (userError) throw userError;
           
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .from('users')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
             
             if (userError) throw userError;
             
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('users')
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       throw new Error('This email is already registered. Please try logging in or use a different email address.');
