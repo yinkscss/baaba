@@ -35,6 +35,34 @@ export interface Commission {
   };
 }
 
+// Add VerificationRequest type
+export interface VerificationRequest {
+  id: string;
+  userId: string;
+  type: 'tenant_id_verification' | 'landlord_contract_verification' | 'agent_license_verification';
+  documentUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  notes?: string;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    role: string;
+    schoolIdVerified?: boolean;
+    phoneVerified?: boolean;
+  };
+  reviewer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export function useDashboardStats(userId: string) {
   const queryClient = useQueryClient();
 
@@ -823,5 +851,136 @@ export function useCommissions(agentId: string) {
   return {
     ...query,
     updateCommissionNotes
+  };
+}
+
+// New hook for verification requests
+export function useVerificationRequests() {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['verificationRequests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('verification_requests')
+        .select(`
+          id,
+          user_id,
+          type,
+          document_url,
+          status,
+          submitted_at,
+          reviewed_by,
+          reviewed_at,
+          notes,
+          users!user_id (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            role,
+            school_id_verified,
+            phone_verified
+          ),
+          reviewer:users!reviewed_by (
+            id,
+            first_name,
+            last_name
+          )
+        `)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(request => ({
+        id: request.id,
+        userId: request.user_id,
+        type: request.type,
+        documentUrl: request.document_url,
+        status: request.status,
+        submittedAt: request.submitted_at,
+        reviewedBy: request.reviewed_by,
+        reviewedAt: request.reviewed_at,
+        notes: request.notes,
+        user: request.users ? {
+          id: request.users.id,
+          firstName: request.users.first_name,
+          lastName: request.users.last_name,
+          email: request.users.email,
+          phoneNumber: request.users.phone_number,
+          role: request.users.role,
+          schoolIdVerified: request.users.school_id_verified,
+          phoneVerified: request.users.phone_verified
+        } : undefined,
+        reviewer: request.reviewer ? {
+          id: request.reviewer.id,
+          firstName: request.reviewer.first_name,
+          lastName: request.reviewer.last_name
+        } : undefined
+      })) as VerificationRequest[];
+    }
+  });
+
+  const updateVerificationStatus = useMutation({
+    mutationFn: async ({ 
+      requestId, 
+      status, 
+      notes, 
+      reviewedBy 
+    }: { 
+      requestId: string; 
+      status: VerificationRequest['status']; 
+      notes?: string;
+      reviewedBy: string;
+    }) => {
+      const { error } = await supabase
+        .from('verification_requests')
+        .update({
+          status,
+          notes,
+          reviewed_by: reviewedBy,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      // If approved, update the user's verification status
+      if (status === 'approved') {
+        const { data: request } = await supabase
+          .from('verification_requests')
+          .select('user_id, type')
+          .eq('id', requestId)
+          .single();
+
+        if (request) {
+          const updateData: any = {};
+          
+          if (request.type === 'tenant_id_verification') {
+            updateData.school_id_verified = true;
+          } else if (request.type === 'landlord_contract_verification') {
+            updateData.verified = true;
+          } else if (request.type === 'agent_license_verification') {
+            updateData.verified = true;
+          }
+
+          if (Object.keys(updateData).length > 0) {
+            await supabase
+              .from('users')
+              .update(updateData)
+              .eq('id', request.user_id);
+          }
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['verificationRequests'] });
+    }
+  });
+
+  return {
+    ...query,
+    updateVerificationStatus
   };
 }
