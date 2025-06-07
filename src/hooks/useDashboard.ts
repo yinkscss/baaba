@@ -6,6 +6,35 @@ import type {
   InspectionRequest, EscrowTransaction, Property
 } from '../types';
 
+// Add Commission type
+export interface Commission {
+  id: string;
+  agentId: string;
+  leaseId: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  payoutDate?: string;
+  createdAt: string;
+  notes?: string;
+  lease?: {
+    id: string;
+    userId: string;
+    propertyId: string;
+    rentAmount: number;
+    property?: {
+      id: string;
+      title: string;
+      address: string;
+    };
+    tenant?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+  };
+}
+
 export function useDashboardStats(userId: string) {
   const queryClient = useQueryClient();
 
@@ -643,5 +672,156 @@ export function useLandlordProperties(landlordId: string) {
   return {
     ...query,
     updatePropertyStatus
+  };
+}
+
+// New hook for agent-managed properties
+export function useAgentManagedProperties(agentId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['agentManagedProperties', agentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          agent_managed_properties_view!inner(agent_id)
+        `)
+        .eq('agent_managed_properties_view.agent_id', agentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(property => ({
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        price: property.price,
+        location: property.location,
+        address: property.address,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        size: property.size,
+        amenities: property.amenities,
+        images: property.images,
+        landlordId: property.landlord_id,
+        createdAt: property.created_at,
+        updatedAt: property.updated_at,
+        available: property.available,
+        featured: property.featured,
+        status: property.status
+      })) as Property[];
+    }
+  });
+
+  const updatePropertyStatus = useMutation({
+    mutationFn: async ({ propertyId, status }: { propertyId: string; status: Property['status'] }) => {
+      const { error } = await supabase
+        .from('properties')
+        .update({ status })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agentManagedProperties'] });
+    }
+  });
+
+  return {
+    ...query,
+    updatePropertyStatus
+  };
+}
+
+// New hook for commissions
+export function useCommissions(agentId: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['commissions', agentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('commissions')
+        .select(`
+          id,
+          agent_id,
+          lease_id,
+          amount,
+          status,
+          payout_date,
+          created_at,
+          notes,
+          leases!lease_id (
+            id,
+            user_id,
+            property_id,
+            rent_amount,
+            properties!property_id (
+              id,
+              title,
+              address
+            ),
+            users!user_id (
+              id,
+              first_name,
+              last_name,
+              email
+            )
+          )
+        `)
+        .eq('agent_id', agentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(commission => ({
+        id: commission.id,
+        agentId: commission.agent_id,
+        leaseId: commission.lease_id,
+        amount: commission.amount,
+        status: commission.status,
+        payoutDate: commission.payout_date,
+        createdAt: commission.created_at,
+        notes: commission.notes,
+        lease: commission.leases ? {
+          id: commission.leases.id,
+          userId: commission.leases.user_id,
+          propertyId: commission.leases.property_id,
+          rentAmount: commission.leases.rent_amount,
+          property: commission.leases.properties ? {
+            id: commission.leases.properties.id,
+            title: commission.leases.properties.title,
+            address: commission.leases.properties.address
+          } : undefined,
+          tenant: commission.leases.users ? {
+            id: commission.leases.users.id,
+            firstName: commission.leases.users.first_name,
+            lastName: commission.leases.users.last_name,
+            email: commission.leases.users.email
+          } : undefined
+        } : undefined
+      })) as Commission[];
+    }
+  });
+
+  const updateCommissionNotes = useMutation({
+    mutationFn: async ({ commissionId, notes }: { commissionId: string; notes: string }) => {
+      const { error } = await supabase
+        .from('commissions')
+        .update({ notes })
+        .eq('id', commissionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['commissions', agentId] });
+    }
+  });
+
+  return {
+    ...query,
+    updateCommissionNotes
   };
 }
