@@ -5,15 +5,22 @@ import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { formatCurrency } from '../../../lib/utils';
-import { MOCK_PROPERTIES } from '../../properties/mock-data';
+import { useProperty } from '../../../hooks/useDashboard';
 
 const TenantPropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContact, setShowContact] = useState(false);
 
-  // Find the property from mock data
-  const property = MOCK_PROPERTIES.find(p => p.id === id);
+  const { data: property, isLoading } = useProperty(id || '');
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -161,8 +168,8 @@ const TenantPropertyDetailPage: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 border-t border-nav pt-4"
                 >
-                  <p className="font-medium">Mr. Oluwaseun Adebayo</p>
-                  <p className="text-text-secondary">+234 801 234 5678</p>
+                  <p className="font-medium">Property Owner</p>
+                  <p className="text-text-secondary">Contact via platform</p>
                 </motion.div>
               )}
             </CardContent>
@@ -179,7 +186,7 @@ const TenantPropertyDetailPage: React.FC = () => {
                   <Calendar className="h-5 w-5 text-accent-blue" />
                   <div>
                     <p className="text-sm text-text-secondary">Move-in Date</p>
-                    <p className="font-medium text-text-primary">September 1, 2024</p>
+                    <p className="font-medium text-text-primary">Available Now</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

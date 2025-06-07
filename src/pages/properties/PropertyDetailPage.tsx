@@ -5,69 +5,31 @@ import { motion } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { formatCurrency } from '../../lib/utils';
-
-// Mock property data (in a real app, this would come from your API)
-const MOCK_PROPERTY = {
-  id: '1',
-  title: 'Modern Studio Near University of Lagos',
-  description: 'This beautifully designed studio apartment offers the perfect blend of comfort and convenience for students. Located just minutes from the University of Lagos campus, this property features modern amenities, secure access, and a vibrant student community.',
-  price: 250000,
-  location: 'Yaba, Lagos',
-  address: '123 University Road, Yaba, Lagos',
-  bedrooms: 1,
-  bathrooms: 1,
-  size: 35,
-  amenities: [
-    'Wi-Fi Included',
-    'Air Conditioning',
-    '24/7 Security',
-    'Water Supply',
-    'Backup Generator',
-    'Furnished',
-    'Balcony',
-    'CCTV'
-  ],
-  images: [
-    'https://images.pexels.com/photos/1918291/pexels-photo-1918291.jpeg',
-    'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg',
-    'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg'
-  ],
-  landlord: {
-    name: 'Mr. Oluwaseun Adebayo',
-    phone: '+234 801 234 5678',
-    responseRate: 95,
-    responseTime: '2 hours',
-    properties: 5,
-    verified: true
-  },
-  availability: {
-    status: 'available',
-    moveInDate: '2024-09-01',
-    minimumStay: '1 year'
-  },
-  features: [
-    'Recently renovated',
-    'Close to public transport',
-    'Shopping centers nearby',
-    'Quiet neighborhood',
-    'Good mobile network coverage',
-    'Regular water supply'
-  ],
-  policies: {
-    smoking: false,
-    pets: false,
-    visitors: 'Allowed (with registration)',
-    utilities: 'Not included in rent'
-  }
-};
+import { useProperty } from '../../hooks/useDashboard';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContact, setShowContact] = useState(false);
 
-  // In a real app, you would fetch the property data based on the ID
-  const property = MOCK_PROPERTY;
+  const { data: property, isLoading } = useProperty(id || '');
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center">
+        <h2 className="mb-2 text-xl font-semibold text-text-primary">Property Not Found</h2>
+        <p className="text-text-secondary">The property you're looking for doesn't exist.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 pb-12 pt-24">
@@ -165,39 +127,12 @@ const PropertyDetailPage: React.FC = () => {
                   <p className="text-sm text-text-muted">Move-in Date</p>
                   <div className="mt-1 flex items-center">
                     <Calendar size={16} className="mr-2 text-accent-blue" />
-                    <span>{new Date(property.availability.moveInDate).toLocaleDateString()}</span>
+                    <span>Available Now</span>
                   </div>
                 </div>
                 <div>
                   <p className="text-sm text-text-muted">Minimum Stay</p>
-                  <p className="mt-1">{property.availability.minimumStay}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Policies */}
-          <Card className="mb-8 border border-nav">
-            <CardHeader>
-              <CardTitle>House Rules & Policies</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm text-text-muted">Smoking</p>
-                  <p className="mt-1">{property.policies.smoking ? 'Allowed' : 'Not allowed'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-text-muted">Pets</p>
-                  <p className="mt-1">{property.policies.pets ? 'Allowed' : 'Not allowed'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-text-muted">Visitors</p>
-                  <p className="mt-1">{property.policies.visitors}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-text-muted">Utilities</p>
-                  <p className="mt-1">{property.policies.utilities}</p>
+                  <p className="mt-1">1 year</p>
                 </div>
               </div>
             </CardContent>
@@ -237,36 +172,40 @@ const PropertyDetailPage: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 border-t border-nav pt-4"
                 >
-                  <p className="font-medium">{property.landlord.name}</p>
-                  <p className="text-text-secondary">{property.landlord.phone}</p>
+                  <p className="font-medium">Property Owner</p>
+                  <p className="text-text-secondary">Contact via platform</p>
                 </motion.div>
               )}
             </CardContent>
           </Card>
 
-          {/* Landlord Card */}
+          {/* Property Status */}
           <Card className="border border-nav">
             <CardHeader>
-              <CardTitle>About the Landlord</CardTitle>
+              <CardTitle>Property Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Response Rate</span>
-                  <span className="font-medium">{property.landlord.responseRate}%</span>
+                  <span className="text-text-secondary">Status</span>
+                  <span className={`font-medium capitalize ${
+                    property.status === 'active' ? 'text-accent-green' : 
+                    property.status === 'rented' ? 'text-warning-DEFAULT' : 
+                    'text-text-muted'
+                  }`}>
+                    {property.status}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Response Time</span>
-                  <span className="font-medium">{property.landlord.responseTime}</span>
+                  <span className="text-text-secondary">Available</span>
+                  <span className={`font-medium ${property.available ? 'text-accent-green' : 'text-error-DEFAULT'}`}>
+                    {property.available ? 'Yes' : 'No'}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Properties</span>
-                  <span className="font-medium">{property.landlord.properties}</span>
-                </div>
-                {property.landlord.verified && (
-                  <div className="flex items-center text-accent-green">
+                {property.featured && (
+                  <div className="flex items-center text-accent-blue">
                     <Check size={16} className="mr-2" />
-                    <span>Verified Landlord</span>
+                    <span>Featured Property</span>
                   </div>
                 )}
               </div>

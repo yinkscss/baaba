@@ -704,6 +704,104 @@ export function useLandlordProperties(landlordId: string) {
   };
 }
 
+// New hook for fetching properties with filters
+export function useProperties(filters?: {
+  search?: string;
+  priceRange?: [number, number];
+  bedrooms?: number;
+  location?: string;
+}) {
+  return useQuery({
+    queryKey: ['properties', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('properties')
+        .select('*')
+        .eq('available', true)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (filters?.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,location.ilike.%${filters.search}%,address.ilike.%${filters.search}%`);
+      }
+
+      if (filters?.priceRange) {
+        query = query.gte('price', filters.priceRange[0]).lte('price', filters.priceRange[1]);
+      }
+
+      if (filters?.bedrooms) {
+        query = query.eq('bedrooms', filters.bedrooms);
+      }
+
+      if (filters?.location) {
+        query = query.ilike('location', `%${filters.location}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return data.map(property => ({
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        price: property.price,
+        location: property.location,
+        address: property.address,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        size: property.size,
+        amenities: property.amenities,
+        images: property.images,
+        landlordId: property.landlord_id,
+        createdAt: property.created_at,
+        updatedAt: property.updated_at,
+        available: property.available,
+        featured: property.featured,
+        status: property.status
+      })) as Property[];
+    }
+  });
+}
+
+// New hook for fetching a single property
+export function useProperty(propertyId: string) {
+  return useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        location: data.location,
+        address: data.address,
+        bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms,
+        size: data.size,
+        amenities: data.amenities,
+        images: data.images,
+        landlordId: data.landlord_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        available: data.available,
+        featured: data.featured,
+        status: data.status
+      } as Property;
+    },
+    enabled: !!propertyId
+  });
+}
+
 // New hook for agent-managed properties
 export function useAgentManagedProperties(agentId: string) {
   const queryClient = useQueryClient();

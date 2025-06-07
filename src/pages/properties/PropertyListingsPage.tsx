@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/search-bar';
 import { PropertyCard } from '../../components/ui/property-card';
-import { MOCK_PROPERTIES } from './mock-data';
+import { useProperties } from '../../hooks/useDashboard';
 
 const PropertyListingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,23 +15,12 @@ const PropertyListingsPage: React.FC = () => {
   const [bedrooms, setBedrooms] = useState<number | ''>('');
   const [location, setLocation] = useState('');
 
-  // Filter properties based on search and filters
-  const filteredProperties = MOCK_PROPERTIES.filter((property) => {
-    const matchesSearch = 
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesPrice = 
-      property.price >= priceRange[0] && property.price <= priceRange[1];
-    
-    const matchesBedrooms = 
-      bedrooms === '' || property.bedrooms === bedrooms;
-    
-    const matchesLocation = 
-      location === '' || property.location.toLowerCase().includes(location.toLowerCase());
-    
-    return matchesSearch && matchesPrice && matchesBedrooms && matchesLocation;
+  // Use real data from Supabase
+  const { data: properties, isLoading } = useProperties({
+    search: searchQuery,
+    priceRange,
+    bedrooms: bedrooms === '' ? undefined : bedrooms,
+    location
   });
 
   const handleSearch = (query: string) => {
@@ -41,6 +30,14 @@ const PropertyListingsPage: React.FC = () => {
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-20 md:pt-24">
@@ -81,14 +78,14 @@ const PropertyListingsPage: React.FC = () => {
           {/* Results count */}
           <div className="mt-6">
             <p className="text-text-secondary">
-              Showing {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
+              Showing {properties?.length || 0} {(properties?.length || 0) === 1 ? 'property' : 'properties'}
             </p>
           </div>
         </div>
 
         {/* Property Listings */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProperties.map((property) => (
+          {properties?.map((property) => (
             <PropertyCard
               key={property.id}
               id={property.id}
@@ -106,7 +103,7 @@ const PropertyListingsPage: React.FC = () => {
         </div>
 
         {/* No results message */}
-        {filteredProperties.length === 0 && (
+        {properties?.length === 0 && (
           <div className="my-12 text-center">
             <p className="mb-4 text-lg text-text-secondary">
               No properties match your search criteria.
