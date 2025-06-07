@@ -1,5 +1,3 @@
-import type { User, Property } from './index';
-
 export type UserRole = 'tenant' | 'landlord' | 'agent' | 'pending';
 
 export interface User {
