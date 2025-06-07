@@ -117,6 +117,20 @@ const DashboardLayout: React.FC = () => {
     }
   };
 
+  // Get role-specific settings path
+  const getSettingsPath = () => {
+    if (isTenant) return '/dashboard/tenant/settings';
+    if (isAgent) return '/dashboard/agent/settings';
+    return '/dashboard/landlord/settings';
+  };
+
+  // Get role display name
+  const getRoleDisplayName = () => {
+    if (isTenant) return 'Student';
+    if (isAgent) return 'Agent';
+    return 'Landlord';
+  };
+
   return (
     <div className="flex h-screen bg-background text-text-primary">
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -152,7 +166,10 @@ const DashboardLayout: React.FC = () => {
                   <UserIcon size={16} />
                 </div>
               )}
-              <span className="hidden md:block">{user.firstName}</span>
+              <div className="hidden md:block text-left">
+                <span className="block text-sm font-medium">{user.firstName}</span>
+                <span className="block text-xs text-text-secondary">{getRoleDisplayName()}</span>
+              </div>
               <ChevronDown size={16} className={`transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -160,7 +177,7 @@ const DashboardLayout: React.FC = () => {
               <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-card shadow-lg ring-1 ring-nav focus:outline-none">
                 <div className="py-1">
                   <Link 
-                    to={`/dashboard/${isTenant ? 'tenant' : isAgent ? 'agent' : 'landlord'}/settings`}
+                    to={getSettingsPath()}
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-nav hover:text-text-primary"
                     onClick={() => setIsProfileDropdownOpen(false)}
                   >

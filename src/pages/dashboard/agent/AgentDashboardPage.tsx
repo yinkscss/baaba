@@ -61,7 +61,7 @@ const AgentDashboardPage: React.FC = () => {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
-            Welcome back, Agent {user?.firstName}! 👋
+            Welcome back, {user?.firstName}! 👋
           </h1>
           <p className="text-text-secondary">
             Here's an overview of your managed properties and activities.
