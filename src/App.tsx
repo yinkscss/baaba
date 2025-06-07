@@ -34,6 +34,7 @@ import TenantSettingsPage from './pages/dashboard/tenant/TenantSettingsPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import CommissionsPage from './pages/dashboard/agent/CommissionsPage';
+import VerificationQueuePage from './pages/dashboard/agent/VerificationQueuePage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequestsPage';
 import EscrowManagementPage from './pages/dashboard/landlord/EscrowManagementPage';
@@ -217,6 +218,14 @@ function App() {
           } 
         />
         <Route 
+          path="/dashboard/agent/verification" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <VerificationQueuePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/dashboard/landlord/add-property" 
           element={
             <ProtectedRoute requiredRole="landlord">
@@ -297,3 +306,5 @@ function App() {
 }
 
 export default App;
+
+export default App
