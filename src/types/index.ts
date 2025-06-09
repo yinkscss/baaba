@@ -13,6 +13,7 @@ export interface User {
   notificationPreferences?: Record<string, boolean>;
   schoolIdVerified?: boolean;
   phoneVerified?: boolean;
+  defaultLandlordId?: string;
 }
 
 export interface Property {

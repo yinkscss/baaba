@@ -92,7 +92,17 @@ const AddPropertyPage: React.FC = () => {
       // Upload images
       const imageUrls = await uploadImages(selectedFiles);
 
-      // Create property listing - agent's user ID is automatically assigned as landlord_id
+      // Determine landlord_id based on user role
+      let landlordId: string;
+      if (user?.role === 'agent') {
+        // Use agent's default landlord ID
+        landlordId = user.defaultLandlordId || user.id;
+      } else {
+        // Use landlord's own ID
+        landlordId = user?.id || '';
+      }
+
+      // Create property listing
       const { error: insertError } = await supabase
         .from('properties')
         .insert({
@@ -106,7 +116,7 @@ const AddPropertyPage: React.FC = () => {
           size: data.size,
           amenities,
           images: imageUrls,
-          landlord_id: user?.id, // Agent's own ID is used as landlord_id
+          landlord_id: landlordId,
           status: 'active'
         });
 
@@ -132,7 +142,7 @@ const AddPropertyPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-text-primary">Add New Property</h1>
         <p className="mt-2 text-text-secondary">
           {user?.role === 'agent' 
-            ? 'List a property that you own.'
+            ? 'List a property that you manage.'
             : 'List your property to reach thousands of potential student tenants.'
           }
         </p>

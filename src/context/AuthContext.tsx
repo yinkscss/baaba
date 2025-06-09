@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User, UserRole } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 type AuthContextType = {
   user: User | null;
@@ -42,7 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               phoneNumber: userData.phone_number,
               profileImage: userData.profile_image,
               createdAt: userData.created_at,
-              verified: userData.verified
+              verified: userData.verified,
+              defaultLandlordId: userData.default_landlord_id
             });
           }
         }
@@ -83,7 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 phoneNumber: userData.phone_number,
                 profileImage: userData.profile_image,
                 createdAt: userData.created_at,
-                verified: userData.verified
+                verified: userData.verified,
+                defaultLandlordId: userData.default_landlord_id
               });
             }
           } else {
@@ -155,9 +158,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
+    let updateData: any = { role: newRole };
+
+    // Generate default landlord ID for agents
+    if (newRole === 'agent') {
+      const defaultLandlordId = uuidv4();
+      updateData.default_landlord_id = defaultLandlordId;
+    }
+
     const { data, error } = await supabase
       .from('users')
-      .update({ role: newRole })
+      .update(updateData)
       .eq('id', userId)
       .select()
       .single();
@@ -174,7 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: data.phone_number,
         profileImage: data.profile_image,
         createdAt: data.created_at,
-        verified: data.verified
+        verified: data.verified,
+        defaultLandlordId: data.default_landlord_id
       });
     }
   };
