@@ -582,9 +582,38 @@ export function useInspectionRequests(propertyId?: string) {
     }
   });
 
+  const submitRequest = useMutation({
+    mutationFn: async (request: {
+      propertyId: string;
+      tenantId: string;
+      requestedDate: string;
+      message: string;
+      status: InspectionRequest['status'];
+    }) => {
+      const { data, error } = await supabase
+        .from('inspection_requests')
+        .insert({
+          property_id: request.propertyId,
+          tenant_id: request.tenantId,
+          requested_date: request.requestedDate,
+          message: request.message,
+          status: request.status
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspectionRequests'] });
+    }
+  });
+
   return {
     ...query,
-    updateStatus
+    updateStatus,
+    submitRequest
   };
 }
 

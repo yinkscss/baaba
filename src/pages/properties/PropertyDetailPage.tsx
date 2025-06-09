@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { MapPin, Bed, Bath, Square, Heart, Share2, Calendar, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { formatCurrency } from '../../lib/utils';
 import { useProperty } from '../../hooks/useDashboard';
+import InspectionRequestForm from '../../components/forms/InspectionRequestForm';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContact, setShowContact] = useState(false);
+  const [showInspectionForm, setShowInspectionForm] = useState(false);
 
   const { data: property, isLoading } = useProperty(id || '');
 
@@ -30,6 +32,11 @@ const PropertyDetailPage: React.FC = () => {
       </div>
     );
   }
+
+  const handleInspectionSuccess = () => {
+    // Show success message or redirect
+    console.log('Inspection request submitted successfully!');
+  };
 
   return (
     <div className="container mx-auto px-4 pb-12 pt-24">
@@ -151,7 +158,12 @@ const PropertyDetailPage: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-3">
-                <Button className="w-full">Schedule Viewing</Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => setShowInspectionForm(true)}
+                >
+                  Apply Now
+                </Button>
                 <Button variant="outline" className="w-full" onClick={() => setShowContact(!showContact)}>
                   Contact Landlord
                 </Button>
@@ -213,6 +225,18 @@ const PropertyDetailPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Inspection Request Form Modal */}
+      <AnimatePresence>
+        {showInspectionForm && (
+          <InspectionRequestForm
+            propertyId={property.id}
+            propertyTitle={property.title}
+            onClose={() => setShowInspectionForm(false)}
+            onSuccess={handleInspectionSuccess}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
