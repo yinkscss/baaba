@@ -335,7 +335,7 @@ const InspectionRequestForm: React.FC<InspectionRequestFormProps> = ({
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="max-h-[70vh] overflow-y-auto">
             <AnimatePresence mode="wait">
               {renderStep()}
             </AnimatePresence>
