@@ -92,14 +92,12 @@ const AddPropertyPage: React.FC = () => {
       // Upload images
       const imageUrls = await uploadImages(selectedFiles);
 
-      // Determine landlord_id based on user role
-      let landlordId: string;
-      if (user?.role === 'agent') {
-        // Use agent's default landlord ID
-        landlordId = user.defaultLandlordId || user.id;
-      } else {
-        // Use landlord's own ID
-        landlordId = user?.id || '';
+      // Always use the current authenticated user's ID as landlord_id
+      // This ensures the foreign key constraint is satisfied
+      const landlordId = user?.id;
+
+      if (!landlordId) {
+        throw new Error('User not authenticated');
       }
 
       // Create property listing
