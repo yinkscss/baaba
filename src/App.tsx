@@ -37,6 +37,8 @@ import CommissionsPage from './pages/dashboard/agent/CommissionsPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequestsPage';
 import MyPropertiesPage from './pages/dashboard/landlord/MyPropertiesPage';
+import LandlordSettingsPage from './pages/dashboard/landlord/LandlordSettingsPage';
+import AgentSettingsPage from './pages/dashboard/agent/AgentSettingsPage';
 
 // Renamed Payment/Earnings Pages
 import AgentPaymentsEarningsPage from './pages/dashboard/agent/PaymentsEarningsPage';
@@ -203,6 +205,14 @@ function App() {
           } 
         />
         <Route 
+          path="/dashboard/landlord/settings" 
+          element={
+            <ProtectedRoute requiredRole="landlord">
+              <LandlordSettingsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/dashboard/agent" 
           element={
             <ProtectedRoute requiredRole="agent">
@@ -215,6 +225,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="agent">
               <CommissionsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/agent/settings" 
+          element={
+            <ProtectedRoute requiredRole="agent">
+              <AgentSettingsPage />
             </ProtectedRoute>
           } 
         />
