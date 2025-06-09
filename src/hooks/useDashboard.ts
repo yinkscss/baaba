@@ -37,7 +37,7 @@ export interface Commission {
 }
 
 // Add VerificationRequest type
-export interface VerificationRequest {
+interface VerificationRequest {
   id: string;
   userId: string;
   type: 'tenant_id_verification' | 'landlord_contract_verification' | 'agent_license_verification';
@@ -1010,7 +1010,7 @@ export function useCommissions(agentId: string) {
 }
 
 // New hook for verification requests
-export function useVerificationRequests() {
+function useVerificationRequests() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1176,7 +1176,7 @@ function useManagedLandlords(agentId: string) {
 }
 
 // New hooks for messaging functionality
-export function useConversations(userId: string) {
+function useConversations(userId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1308,7 +1308,7 @@ export function useConversations(userId: string) {
   };
 }
 
-export function useMessages(conversationId: string) {
+function useMessages(conversationId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
