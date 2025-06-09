@@ -18,7 +18,7 @@ const TenantRoommateMatchingPage: React.FC = () => {
         .from('roommate_preferences')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
