@@ -1,10 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
-import { CreditCard, Calendar, ArrowUpRight, Clock } from 'lucide-react';
+import { CreditCard, Calendar, ArrowUpRight, Clock, Download, Receipt } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { useCurrentLease, usePayments } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
+import { PaymentWorkflow } from '../../../components/dashboard/PaymentWorkflow';
 
 const TenantPaymentCenterPage: React.FC = () => {
   const { user } = useAuth();
@@ -30,52 +31,50 @@ const TenantPaymentCenterPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border border-nav">
-          <CardHeader>
-            <CardTitle>Next Payment Due</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-3xl font-bold text-accent-blue">
-                    {lease ? formatCurrency(lease.rentAmount) : '₦0'}
-                  </p>
-                  <p className="text-sm text-text-secondary">
-                    Due on {lease ? new Date(lease.startDate).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-accent-blue" />
-              </div>
-              <Button className="w-full" disabled={!lease}>Pay Now</Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Payment Workflow Component */}
+      <PaymentWorkflow />
 
-        <Card className="border border-nav">
-          <CardHeader>
-            <CardTitle>Payment Schedule</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-accent-blue" />
-                <div>
-                  <p className="font-medium text-text-primary">Annual Payment</p>
-                  <p className="text-sm text-text-secondary">
-                    Next renewal: {lease ? new Date(lease.endDate).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
+      {/* Payment Schedule */}
+      <Card className="border border-nav">
+        <CardHeader>
+          <CardTitle>Payment Schedule</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-accent-blue" />
+              <div>
+                <p className="font-medium text-text-primary">Annual Payment</p>
+                <p className="text-sm text-text-secondary">
+                  Next renewal: {lease ? new Date(lease.endDate).toLocaleDateString() : 'N/A'}
+                </p>
               </div>
-              <Button variant="outline" className="w-full" disabled={!lease}>
-                View Payment Schedule
-              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-lg border border-nav p-4">
+                <p className="text-sm text-text-secondary">Current Lease</p>
+                <p className="text-lg font-semibold text-text-primary">
+                  {lease ? formatCurrency(lease.rentAmount) : '₦0'}
+                </p>
+                <p className="text-sm text-text-muted">per year</p>
+              </div>
+              <div className="rounded-lg border border-nav p-4">
+                <p className="text-sm text-text-secondary">Next Payment</p>
+                <p className="text-lg font-semibold text-text-primary">
+                  {lease ? new Date(lease.endDate).toLocaleDateString() : 'N/A'}
+                </p>
+                <p className="text-sm text-text-muted">renewal date</p>
+              </div>
+            </div>
+            <Button variant="outline" className="w-full" disabled={!lease}>
+              <Download className="mr-2 h-4 w-4" />
+              Download Payment Schedule
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Payment History */}
       <Card className="border border-nav">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
@@ -96,12 +95,26 @@ const TenantPaymentCenterPage: React.FC = () => {
                     <p className="text-sm text-text-secondary">
                       {new Date(payment.paymentDate).toLocaleDateString()}
                     </p>
+                    {payment.transactionId && (
+                      <p className="text-xs text-text-muted">
+                        ID: {payment.transactionId}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-accent-blue/10 px-2 py-1 text-xs font-medium text-accent-blue">
+                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${
+                    payment.status === 'paid' 
+                      ? 'bg-accent-green/10 text-accent-green'
+                      : payment.status === 'pending'
+                      ? 'bg-warning-DEFAULT/10 text-warning-DEFAULT'
+                      : 'bg-error-DEFAULT/10 text-error-DEFAULT'
+                  }`}>
                     {payment.status}
                   </span>
+                  <Button variant="ghost" size="sm">
+                    <Receipt className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm">
                     <ArrowUpRight className="h-4 w-4" />
                   </Button>
@@ -109,7 +122,13 @@ const TenantPaymentCenterPage: React.FC = () => {
               </div>
             ))}
             {payments?.length === 0 && (
-              <p className="text-center text-text-secondary">No payment history available</p>
+              <div className="text-center py-8">
+                <Clock className="mx-auto mb-4 h-12 w-12 text-text-muted" />
+                <p className="text-text-secondary">No payment history available</p>
+                <p className="text-sm text-text-muted">
+                  Your payment history will appear here once you make your first payment
+                </p>
+              </div>
             )}
           </div>
         </CardContent>
