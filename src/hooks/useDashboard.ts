@@ -652,9 +652,26 @@ export function useEscrowTransactions(leaseId?: string) {
     }
   });
 
+  const confirmTenantInspection = useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase
+        .from('escrow_transactions')
+        .update({
+          tenant_confirmed_inspection: true
+        })
+        .eq('id', transactionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escrowTransactions'] });
+    }
+  });
+
   return {
     ...query,
-    releaseFunds
+    releaseFunds,
+    confirmTenantInspection
   };
 }
 

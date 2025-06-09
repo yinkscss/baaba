@@ -153,6 +153,7 @@ export interface EscrowTransaction {
   releasedAt?: string;
   createdAt: string;
   updatedAt: string;
+  tenantConfirmedInspection?: boolean;
   lease?: Lease;
 }
 

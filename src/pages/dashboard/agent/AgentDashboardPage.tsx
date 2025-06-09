@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Users, CreditCard, TrendingUp, Plus, Bell, Settings, UserCheck, MessageSquare } from 'lucide-react';
+import { Building, CreditCard, TrendingUp, Plus, Bell, Settings, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
@@ -36,22 +36,16 @@ const AgentDashboardPage: React.FC = () => {
       path: '/dashboard/agent/inspection-requests'
     },
     {
-      title: 'Verification Queue',
-      icon: <UserCheck className="h-5 w-5 text-accent-blue" />,
-      description: 'Process tenant and landlord verification requests',
-      path: '/dashboard/agent/verification'
+      title: 'Payments/Earnings',
+      icon: <DollarSign className="h-5 w-5 text-accent-blue" />,
+      description: 'Monitor and manage payment transactions',
+      path: '/dashboard/agent/payments-earnings'
     },
     {
-      title: 'Escrow Management',
+      title: 'Commissions',
       icon: <CreditCard className="h-5 w-5 text-accent-blue" />,
-      description: 'Monitor and manage escrow transactions',
-      path: '/dashboard/agent/escrow'
-    },
-    {
-      title: 'Messages',
-      icon: <MessageSquare className="h-5 w-5 text-accent-blue" />,
-      description: 'Communicate with tenants and landlords',
-      path: '/dashboard/agent/messages'
+      description: 'Track your commission earnings and payouts',
+      path: '/dashboard/agent/commissions'
     }
   ];
 
@@ -160,28 +154,28 @@ const AgentDashboardPage: React.FC = () => {
                 type: 'application',
                 message: 'New tenant application for Yaba Apartment',
                 timestamp: '2 hours ago',
-                icon: Users
+                icon: Building
               },
               {
                 id: '2',
                 type: 'payment',
-                message: 'Rent payment received for Lekki Property',
+                message: 'Payment received for Lekki Property',
                 timestamp: '5 hours ago',
                 icon: CreditCard
               },
               {
                 id: '3',
                 type: 'maintenance',
-                message: 'Maintenance request: AC repair at Victoria Island',
+                message: 'Inspection request: Property viewing at Victoria Island',
                 timestamp: '1 day ago',
                 icon: Bell
               },
               {
                 id: '4',
-                type: 'verification',
-                message: 'New tenant verification request submitted',
+                type: 'commission',
+                message: 'Commission earned from successful lease signing',
                 timestamp: '2 days ago',
-                icon: UserCheck
+                icon: DollarSign
               }
             ].map(activity => (
               <div

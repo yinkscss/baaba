@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Users, CreditCard, TrendingUp, Plus, Bell, Settings, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Building, CreditCard, TrendingUp, Plus, Bell, Settings, Clock, CheckCircle, XCircle, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
@@ -130,10 +130,10 @@ const LandlordDashboardPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Escrow Transactions */}
+        {/* Payments/Earnings */}
         <Card className="border border-nav">
           <CardHeader>
-            <CardTitle>Pending Escrow</CardTitle>
+            <CardTitle>Payments/Earnings</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -156,8 +156,18 @@ const LandlordDashboardPage: React.FC = () => {
                 </div>
               ))}
               {(!pendingEscrow || pendingEscrow.length === 0) && (
-                <p className="text-center text-text-secondary">No pending escrow transactions</p>
+                <div className="text-center py-4">
+                  <DollarSign className="mx-auto mb-2 h-8 w-8 text-text-muted" />
+                  <p className="text-center text-text-secondary">No pending transactions</p>
+                </div>
               )}
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate('/dashboard/landlord/payments-earnings')}
+              >
+                View All
+              </Button>
             </div>
           </CardContent>
         </Card>

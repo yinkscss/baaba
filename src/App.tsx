@@ -34,13 +34,13 @@ import TenantSettingsPage from './pages/dashboard/tenant/TenantSettingsPage';
 import LandlordDashboardPage from './pages/dashboard/landlord/LandlordDashboardPage';
 import AgentDashboardPage from './pages/dashboard/agent/AgentDashboardPage';
 import CommissionsPage from './pages/dashboard/agent/CommissionsPage';
-import VerificationQueuePage from './pages/dashboard/agent/VerificationQueuePage';
-import MessagesPage from './pages/dashboard/agent/MessagesPage';
 import AddPropertyPage from './pages/dashboard/landlord/AddPropertyPage';
 import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequestsPage';
-import EscrowManagementPage from './pages/dashboard/landlord/EscrowManagementPage';
 import MyPropertiesPage from './pages/dashboard/landlord/MyPropertiesPage';
-import LandlordPaymentsPage from './pages/dashboard/landlord/LandlordPaymentsPage';
+
+// Renamed Payment/Earnings Pages
+import AgentPaymentsEarningsPage from './pages/dashboard/agent/PaymentsEarningsPage';
+import LandlordPaymentsEarningsPage from './pages/dashboard/landlord/PaymentsEarningsPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' | 'agent' }) {
   const { user, loading } = useAuth();
@@ -219,22 +219,6 @@ function App() {
           } 
         />
         <Route 
-          path="/dashboard/agent/verification" 
-          element={
-            <ProtectedRoute requiredRole="agent">
-              <VerificationQueuePage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/dashboard/agent/messages" 
-          element={
-            <ProtectedRoute requiredRole="agent">
-              <MessagesPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
           path="/dashboard/landlord/add-property" 
           element={
             <ProtectedRoute requiredRole="landlord">
@@ -251,18 +235,10 @@ function App() {
           } 
         />
         <Route 
-          path="/dashboard/landlord/escrow" 
+          path="/dashboard/landlord/payments-earnings" 
           element={
             <ProtectedRoute requiredRole="landlord">
-              <EscrowManagementPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/dashboard/landlord/payments" 
-          element={
-            <ProtectedRoute requiredRole="landlord">
-              <LandlordPaymentsPage />
+              <LandlordPaymentsEarningsPage />
             </ProtectedRoute>
           } 
         />
@@ -285,10 +261,10 @@ function App() {
           } 
         />
         <Route 
-          path="/dashboard/agent/escrow" 
+          path="/dashboard/agent/payments-earnings" 
           element={
             <ProtectedRoute requiredRole="agent">
-              <EscrowManagementPage />
+              <AgentPaymentsEarningsPage />
             </ProtectedRoute>
           } 
         />

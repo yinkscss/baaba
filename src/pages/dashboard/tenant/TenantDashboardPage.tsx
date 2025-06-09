@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building, Users, CreditCard, Key, MessageSquare, FileText } from 'lucide-react';
+import { Building, Users, CreditCard, Key, FileText, Bell } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -49,7 +49,7 @@ const TenantDashboardPage: React.FC = () => {
     },
     {
       title: 'Submit Complaint',
-      icon: <MessageSquare className="h-5 w-5 text-accent-blue" />,
+      icon: <Bell className="h-5 w-5 text-accent-blue" />,
       description: 'Report issues or submit requests',
       path: '/dashboard/tenant/complaints'
     }

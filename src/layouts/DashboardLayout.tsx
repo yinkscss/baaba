@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Settings, LogOut, Users, Building, FileText, 
   CreditCard, ChevronDown, User as UserIcon,
-  Home, Plus, Bell, Key, MessageSquare, DollarSign,
-  LayoutGrid, Shield, UserCheck
+  Home, Plus, Bell, Key, DollarSign,
+  LayoutGrid
 } from 'lucide-react';
 import { ExpandableTabs } from '../components/ui/expandable-tabs';
 
@@ -40,7 +40,7 @@ const DashboardLayout: React.FC = () => {
         { title: 'Roommates', icon: Users },
         { type: 'separator' as const },
         { title: 'Legal Assistant', icon: FileText },
-        { title: 'Complaints', icon: MessageSquare },
+        { title: 'Complaints', icon: Bell },
       ]
     : isAgent
     ? [
@@ -49,11 +49,9 @@ const DashboardLayout: React.FC = () => {
         { type: 'separator' as const },
         { title: 'Add Property', icon: Plus },
         { title: 'Inspection Requests', icon: Bell },
-        { title: 'Escrow', icon: DollarSign },
+        { title: 'Payments/Earnings', icon: DollarSign },
         { type: 'separator' as const },
         { title: 'Commissions', icon: CreditCard },
-        { title: 'Verification', icon: UserCheck },
-        { title: 'Messages', icon: MessageSquare },
       ]
     : [
         { title: 'Dashboard', icon: Home },
@@ -61,8 +59,7 @@ const DashboardLayout: React.FC = () => {
         { type: 'separator' as const },
         { title: 'Add Property', icon: Plus },
         { title: 'Inspection Requests', icon: Bell },
-        { title: 'Escrow', icon: DollarSign },
-        { title: 'Payments', icon: CreditCard },
+        { title: 'Payments/Earnings', icon: DollarSign },
       ];
 
   const handleTabChange = (index: number | null) => {
@@ -87,10 +84,8 @@ const DashboardLayout: React.FC = () => {
       'Managed Properties': '/dashboard/agent/managed-properties',
       'Add Property': '/dashboard/landlord/add-property', // Reuse landlord's add property
       'Inspection Requests': '/dashboard/agent/inspection-requests',
-      'Escrow': '/dashboard/agent/escrow',
-      'Commissions': '/dashboard/agent/commissions',
-      'Verification': '/dashboard/agent/verification',
-      'Messages': '/dashboard/agent/messages'
+      'Payments/Earnings': '/dashboard/agent/payments-earnings',
+      'Commissions': '/dashboard/agent/commissions'
     };
 
     const landlordPathMap = {
@@ -98,8 +93,7 @@ const DashboardLayout: React.FC = () => {
       'My Properties': '/dashboard/landlord/my-properties',
       'Add Property': '/dashboard/landlord/add-property',
       'Inspection Requests': '/dashboard/landlord/inspection-requests',
-      'Escrow': '/dashboard/landlord/escrow',
-      'Payments': '/dashboard/landlord/payments'
+      'Payments/Earnings': '/dashboard/landlord/payments-earnings'
     };
 
     let pathMap;

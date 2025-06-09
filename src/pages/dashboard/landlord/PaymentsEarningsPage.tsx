@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle, ArrowRight, Search, Filter, DollarSign } from 'lucide-react';
+import { Clock, CheckCircle, ArrowRight, Search, Filter, DollarSign, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -9,8 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useEscrowTransactions } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
 
-const EscrowManagementPage: React.FC = () => {
-  const navigate = useNavigate();
+const LandlordPaymentsEarningsPage: React.FC = () => {
   const { user } = useAuth();
   const { data: transactions, isLoading, releaseFunds } = useEscrowTransactions();
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,18 +40,25 @@ const EscrowManagementPage: React.FC = () => {
     );
   }
 
-  const totalEscrow = filteredTransactions?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
-  const pendingEscrow = filteredTransactions?.filter(tx => tx.status === 'pending_release').reduce((sum, tx) => sum + tx.amount, 0) || 0;
+  const totalEarnings = filteredTransactions?.filter(tx => tx.status === 'released').reduce((sum, tx) => sum + tx.amount, 0) || 0;
+  const pendingEarnings = filteredTransactions?.filter(tx => tx.status === 'pending_release').reduce((sum, tx) => sum + tx.amount, 0) || 0;
+  const totalTransactions = filteredTransactions?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
-          Escrow Management
-        </h1>
-        <p className="mt-1 text-text-secondary">
-          Manage and track escrow transactions for your properties
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
+            Payments & Earnings
+          </h1>
+          <p className="mt-1 text-text-secondary">
+            Track and manage payment transactions and earnings
+          </p>
+        </div>
+        <Button variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Export
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -62,13 +67,13 @@ const EscrowManagementPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Total in Escrow</p>
-                <p className="mt-1 text-2xl font-bold text-text-primary">
-                  {formatCurrency(totalEscrow)}
+                <p className="text-sm text-text-secondary">Total Earnings</p>
+                <p className="mt-1 text-2xl font-bold text-accent-green">
+                  {formatCurrency(totalEarnings)}
                 </p>
               </div>
-              <div className="rounded-full bg-accent-blue/10 p-3">
-                <DollarSign className="h-6 w-6 text-accent-blue" />
+              <div className="rounded-full bg-accent-green/10 p-3">
+                <CheckCircle className="h-6 w-6 text-accent-green" />
               </div>
             </div>
           </CardContent>
@@ -79,12 +84,28 @@ const EscrowManagementPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-text-secondary">Pending Release</p>
-                <p className="mt-1 text-2xl font-bold text-text-primary">
-                  {formatCurrency(pendingEscrow)}
+                <p className="mt-1 text-2xl font-bold text-warning-DEFAULT">
+                  {formatCurrency(pendingEarnings)}
                 </p>
               </div>
               <div className="rounded-full bg-warning-DEFAULT/10 p-3">
                 <Clock className="h-6 w-6 text-warning-DEFAULT" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-nav">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Total Volume</p>
+                <p className="mt-1 text-2xl font-bold text-text-primary">
+                  {formatCurrency(totalTransactions)}
+                </p>
+              </div>
+              <div className="rounded-full bg-accent-blue/10 p-3">
+                <DollarSign className="h-6 w-6 text-accent-blue" />
               </div>
             </div>
           </CardContent>
@@ -124,7 +145,7 @@ const EscrowManagementPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
           >
             <Card className="border border-nav">
-              <CardContent className="grid gap-6 p-6 md:grid-cols-3">
+              <CardContent className="grid gap-6 p-6 md:grid-cols-4">
                 {/* Transaction Info */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -155,19 +176,32 @@ const EscrowManagementPage: React.FC = () => {
                 {/* Lease Info */}
                 <div>
                   <h3 className="mb-1 font-medium text-text-primary">
-                    Lease Details
+                    Transaction Details
                   </h3>
                   <p className="text-sm text-text-secondary">
                     Lease ID: {transaction.leaseId}
                   </p>
                   <p className="text-sm text-text-secondary">
-                    Monthly Rent: {formatCurrency(transaction.lease?.rent_amount || 0)}
+                    Property Rent: {formatCurrency(transaction.lease?.rent_amount || 0)}
+                  </p>
+                </div>
+
+                {/* Status Info */}
+                <div>
+                  <h3 className="mb-1 font-medium text-text-primary">
+                    Payment Status
+                  </h3>
+                  <p className="text-sm text-text-secondary">
+                    {transaction.tenantConfirmedInspection 
+                      ? 'Tenant confirmed inspection' 
+                      : 'Awaiting tenant confirmation'
+                    }
                   </p>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center justify-end">
-                  {transaction.status === 'pending_release' && (
+                  {transaction.status === 'pending_release' && transaction.tenantConfirmedInspection && (
                     <Button
                       onClick={() => handleReleaseFunds(transaction.id)}
                       isLoading={releaseFunds.isLoading}
@@ -175,6 +209,11 @@ const EscrowManagementPage: React.FC = () => {
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Release Funds
                     </Button>
+                  )}
+                  {transaction.status === 'pending_release' && !transaction.tenantConfirmedInspection && (
+                    <p className="text-sm text-text-muted">
+                      Waiting for tenant confirmation
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -184,6 +223,7 @@ const EscrowManagementPage: React.FC = () => {
 
         {filteredTransactions?.length === 0 && (
           <div className="rounded-lg border border-nav p-8 text-center">
+            <DollarSign className="mx-auto mb-4 h-12 w-12 text-text-muted" />
             <p className="text-text-secondary">No transactions found</p>
           </div>
         )}
@@ -192,4 +232,4 @@ const EscrowManagementPage: React.FC = () => {
   );
 };
 
-export default EscrowManagementPage;
+export default LandlordPaymentsEarningsPage;
