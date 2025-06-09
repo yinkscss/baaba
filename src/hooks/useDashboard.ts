@@ -65,7 +65,7 @@ export interface VerificationRequest {
 }
 
 // Add ManagedLandlord type
-export interface ManagedLandlord {
+interface ManagedLandlord {
   id: string;
   firstName: string;
   lastName: string;
@@ -214,7 +214,7 @@ export function useNotifications(userId: string) {
   };
 }
 
-export function useActivities(userId: string) {
+function useActivities(userId: string) {
   return useQuery({
     queryKey: ['activities', userId],
     queryFn: async () => {
@@ -813,7 +813,7 @@ export function useProperty(propertyId: string) {
 }
 
 // New hook for agent-managed properties
-export function useAgentManagedProperties(agentId: string) {
+function useAgentManagedProperties(agentId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1095,7 +1095,7 @@ export function useVerificationRequests() {
 }
 
 // New hook for managed landlords (for agents)
-export function useManagedLandlords(agentId: string) {
+function useManagedLandlords(agentId: string) {
   return useQuery({
     queryKey: ['managedLandlords', agentId],
     queryFn: async () => {

@@ -35,7 +35,7 @@ export interface Property {
   status: 'active' | 'paused' | 'rented';
 }
 
-export interface PaymentPlan {
+interface PaymentPlan {
   id: string;
   name: string;
   price: number;

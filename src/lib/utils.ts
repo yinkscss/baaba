@@ -12,7 +12,7 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(date: string | Date): string {
+function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('en-NG', {
     year: 'numeric',
     month: 'long',
@@ -20,7 +20,7 @@ export function formatDate(date: string | Date): string {
   });
 }
 
-export function truncateText(text: string, maxLength: number): string {
+function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength)}...`;
 }

@@ -76,7 +76,7 @@ interface CardFooterProps {
   children: React.ReactNode;
 }
 
-export const CardFooter: React.FC<CardFooterProps> = ({ className, children }) => {
+const CardFooter: React.FC<CardFooterProps> = ({ className, children }) => {
   return (
     <div className={cn('mt-4 flex items-center', className)}>
       {children}

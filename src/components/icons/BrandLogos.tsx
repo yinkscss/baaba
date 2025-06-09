@@ -5,7 +5,7 @@ interface LogoProps {
   color?: string;
 }
 
-export const FacebookLogo: React.FC<LogoProps> = ({ className, color = '#1877F2' }) => (
+const FacebookLogo: React.FC<LogoProps> = ({ className, color = '#1877F2' }) => (
   <svg viewBox="0 0 24 24" className={className} fill={color}>
     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
   </svg>
@@ -17,25 +17,25 @@ export const SpotifyLogo: React.FC<LogoProps> = ({ className, color = '#1DB954' 
   </svg>
 );
 
-export const LawScaleLogo: React.FC<LogoProps> = ({ className, color = '#8B4513' }) => (
+const LawScaleLogo: React.FC<LogoProps> = ({ className, color = '#8B4513' }) => (
   <svg viewBox="0 0 24 24" className={className} fill={color}>
     <path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-8-7c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm16 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-8-3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
   </svg>
 );
 
-export const BrainChipLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
+const BrainChipLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
   <svg viewBox="0 0 24 24" className={className} fill={color}>
     <path d="M9 2v2h6V2H9zm3 2v2h2V4h-2zm0 2H8v2h4V6zm0 2v6h2V8h-2zm0 6H4v2h8v-2zm0 2v2h2v-2h-2zm0 2H9v2h3v-2z"/>
   </svg>
 );
 
-export const HousingLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
+const HousingLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
   <svg viewBox="0 0 24 24" className={className} fill={color}>
     <path d="M23 9.32l-11-7-11 7v2h2v10h8v-6h2v6h8v-10h2z"/>
   </svg>
 );
 
-export const StudentLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
+const StudentLogo: React.FC<LogoProps> = ({ className, color = 'currentColor' }) => (
   <svg viewBox="0 0 24 24" className={className} fill={color}>
     <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
   </svg>
