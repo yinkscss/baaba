@@ -12,7 +12,9 @@ interface ChatMessage {
 }
 
 interface DappierRequest {
-  query: string
+  src: {
+    query: string
+  }
 }
 
 interface DappierResponse {
@@ -101,10 +103,14 @@ Always provide practical, actionable advice while noting when users should consu
 
     console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
 
-    // Prepare the request to Dappier API
+    // Prepare the request to Dappier API with the correct structure
     const dappierRequest: DappierRequest = {
-      query: queryString
+      src: {
+        query: queryString
+      }
     }
+
+    console.log('Dappier request structure:', JSON.stringify(dappierRequest, null, 2))
 
     // Make the request to Dappier API using the endpoint from your example
     const dappierResponse = await fetch('https://api.dappier.com/app/datamodel/dm_01jwet98pxe1mbkdrwdfm6cm62', {
