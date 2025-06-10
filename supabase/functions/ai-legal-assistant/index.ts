@@ -71,35 +71,8 @@ serve(async (req) => {
       )
     }
 
-    // Build context from conversation history and current message
-    const systemContext = `You are a legal assistant specializing in Nigerian tenancy law. You provide accurate, helpful advice about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria.
-
-Key areas you help with:
-- Tenant rights and landlord obligations under Nigerian law
-- Rent increases and payment disputes
-- Security deposits and refunds
-- Eviction procedures and tenant protections
-- Lease agreement terms and conditions
-- Property maintenance and repair responsibilities
-- Dispute resolution and legal remedies
-
-Always provide practical, actionable advice while noting when users should consult with a qualified lawyer for complex legal matters.`
-
-    // Build the query string with context
-    let queryString = systemContext + '\n\n'
-    
-    // Add conversation history for context (reduced to last 1 exchange to test length constraints)
-    const recentHistory = conversationHistory.slice(-2) // Last 1 user-assistant pair
-    if (recentHistory.length > 0) {
-      queryString += 'Previous conversation:\n'
-      recentHistory.forEach((msg: ChatMessage) => {
-        queryString += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`
-      })
-      queryString += '\n'
-    }
-    
-    // Add current question
-    queryString += `Current question: ${message}`
+    // SIMPLIFIED QUERY FOR TESTING
+    let queryString = "test query"
 
     // Check if queryString is empty before sending
     if (!queryString || queryString.trim().length === 0) {
@@ -117,7 +90,7 @@ Always provide practical, actionable advice while noting when users should consu
     }
 
     console.log('Query string length:', queryString.length)
-    console.log('Sending query to Dappier (first 200 chars):', queryString.substring(0, 200) + '...')
+    console.log('Sending query to Dappier:', queryString)
 
     // Prepare the request to Dappier API with the correct structure
     const dappierRequest: DappierRequest = {
