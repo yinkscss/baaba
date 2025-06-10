@@ -16,9 +16,13 @@ interface DappierRequest {
 }
 
 interface DappierResponse {
+  results?: any
   response?: string
   data?: any
   error?: string
+  answer?: string
+  text?: string
+  content?: string
 }
 
 serve(async (req) => {
@@ -130,26 +134,71 @@ Always provide practical, actionable advice while noting when users should consu
     }
 
     const dappierData: DappierResponse = await dappierResponse.json()
-    console.log('Dappier response:', dappierData)
+    console.log('Dappier response:', JSON.stringify(dappierData, null, 2))
 
-    // Extract the AI response - adjust based on actual Dappier response format
+    // Extract the AI response - handle the 'results' field properly
     let aiResponse = ''
     
-    if (dappierData.response) {
-      aiResponse = dappierData.response
-    } else if (dappierData.data && typeof dappierData.data === 'string') {
-      aiResponse = dappierData.data
-    } else if (dappierData.data && dappierData.data.response) {
-      aiResponse = dappierData.data.response
-    } else {
-      console.log('Unexpected Dappier response format:', dappierData)
-      aiResponse = "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+    // First, check if 'results' field exists and handle it
+    if (dappierData.hasOwnProperty('results')) {
+      if (dappierData.results === null) {
+        console.log('Dappier returned null results - no specific information found')
+        aiResponse = "I apologize, but I couldn't find specific information to answer your question. Could you please rephrase your question or provide more details? For complex legal matters, I recommend consulting with a qualified Nigerian lawyer who specializes in tenancy law."
+      } else if (dappierData.results) {
+        // If results is not null, try to extract content from it
+        if (typeof dappierData.results === 'string') {
+          aiResponse = dappierData.results
+        } else if (typeof dappierData.results === 'object') {
+          // Check common response keys in the results object
+          aiResponse = dappierData.results.answer || 
+                      dappierData.results.response || 
+                      dappierData.results.text || 
+                      dappierData.results.content ||
+                      JSON.stringify(dappierData.results)
+        }
+      }
+    }
+    
+    // Fallback to other possible response fields if results didn't provide a response
+    if (!aiResponse) {
+      if (dappierData.response) {
+        aiResponse = dappierData.response
+      } else if (dappierData.answer) {
+        aiResponse = dappierData.answer
+      } else if (dappierData.text) {
+        aiResponse = dappierData.text
+      } else if (dappierData.content) {
+        aiResponse = dappierData.content
+      } else if (dappierData.data) {
+        if (typeof dappierData.data === 'string') {
+          aiResponse = dappierData.data
+        } else if (dappierData.data.response) {
+          aiResponse = dappierData.data.response
+        } else if (dappierData.data.answer) {
+          aiResponse = dappierData.data.answer
+        } else if (dappierData.data.text) {
+          aiResponse = dappierData.data.text
+        } else if (dappierData.data.content) {
+          aiResponse = dappierData.data.content
+        }
+      }
+    }
+
+    // Final fallback if no response was extracted
+    if (!aiResponse) {
+      console.log('Could not extract response from Dappier data:', dappierData)
+      aiResponse = "I apologize, but I couldn't generate a proper response to your question. Please try rephrasing your question or ask about a specific aspect of Nigerian tenancy law. For urgent legal matters, please consult with a qualified lawyer."
+    }
+
+    // Ensure the response is a string and not empty
+    if (typeof aiResponse !== 'string' || aiResponse.trim().length === 0) {
+      aiResponse = "I apologize, but I couldn't provide a meaningful response. Please try asking your question in a different way, or contact our support team for assistance."
     }
 
     // Return the response
     return new Response(
       JSON.stringify({ 
-        response: aiResponse,
+        response: aiResponse.trim(),
         success: true 
       }),
       { 
