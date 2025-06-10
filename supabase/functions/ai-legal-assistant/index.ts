@@ -88,8 +88,8 @@ Always provide practical, actionable advice while noting when users should consu
     // Build the query string with context
     let queryString = systemContext + '\n\n'
     
-    // Add conversation history for context (last 3 exchanges to keep it manageable)
-    const recentHistory = conversationHistory.slice(-6) // Last 3 user-assistant pairs
+    // Add conversation history for context (reduced to last 1 exchange to test length constraints)
+    const recentHistory = conversationHistory.slice(-2) // Last 1 user-assistant pair
     if (recentHistory.length > 0) {
       queryString += 'Previous conversation:\n'
       recentHistory.forEach((msg: ChatMessage) => {
@@ -101,7 +101,23 @@ Always provide practical, actionable advice while noting when users should consu
     // Add current question
     queryString += `Current question: ${message}`
 
-    console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
+    // Check if queryString is empty before sending
+    if (!queryString || queryString.trim().length === 0) {
+      console.error('Query string is empty after construction!')
+      return new Response(
+        JSON.stringify({ 
+          response: "I apologize, but there was an issue processing your request. Please try again.",
+          error: 'Empty query string'
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('Query string length:', queryString.length)
+    console.log('Sending query to Dappier (first 200 chars):', queryString.substring(0, 200) + '...')
 
     // Prepare the request to Dappier API with the correct structure
     const dappierRequest: DappierRequest = {
