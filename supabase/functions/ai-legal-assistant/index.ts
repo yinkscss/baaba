@@ -98,9 +98,11 @@ serve(async (req) => {
     console.log('Query string length:', queryString.length)
     console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
 
-    // Prepare the request to Dappier API with the correct structure (direct query field)
+    // Prepare the request to Dappier API with the correct structure (wrap query in src object)
     const dappierRequestBody = {
-      query: queryString
+      src: {
+        query: queryString
+      }
     }
 
     console.log('Dappier request structure:', JSON.stringify(dappierRequestBody, null, 2))
