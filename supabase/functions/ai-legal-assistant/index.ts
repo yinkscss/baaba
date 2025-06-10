@@ -12,19 +12,13 @@ interface ChatMessage {
 }
 
 interface DappierRequest {
-  messages: ChatMessage[]
-  model?: string
-  max_tokens?: number
-  temperature?: number
+  query: string
 }
 
 interface DappierResponse {
-  choices: Array<{
-    message: {
-      content: string
-      role: string
-    }
-  }>
+  response?: string
+  data?: any
+  error?: string
 }
 
 serve(async (req) => {
@@ -71,8 +65,8 @@ serve(async (req) => {
       )
     }
 
-    // Prepare the conversation context with system prompt
-    const systemPrompt = `You are a legal assistant specializing in Nigerian tenancy law. You provide accurate, helpful advice about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria. 
+    // Build context from conversation history and current message
+    const systemContext = `You are a legal assistant specializing in Nigerian tenancy law. You provide accurate, helpful advice about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria.
 
 Key areas you help with:
 - Tenant rights and landlord obligations under Nigerian law
@@ -83,25 +77,33 @@ Key areas you help with:
 - Property maintenance and repair responsibilities
 - Dispute resolution and legal remedies
 
-Always provide practical, actionable advice while noting when users should consult with a qualified lawyer for complex legal matters. Be concise but thorough in your responses.`
+Always provide practical, actionable advice while noting when users should consult with a qualified lawyer for complex legal matters.`
 
-    // Build the messages array for Dappier API
-    const messages: ChatMessage[] = [
-      { role: 'assistant', content: systemPrompt },
-      ...conversationHistory,
-      { role: 'user', content: message }
-    ]
+    // Build the query string with context
+    let queryString = systemContext + '\n\n'
+    
+    // Add conversation history for context (last 3 exchanges to keep it manageable)
+    const recentHistory = conversationHistory.slice(-6) // Last 3 user-assistant pairs
+    if (recentHistory.length > 0) {
+      queryString += 'Previous conversation:\n'
+      recentHistory.forEach((msg: ChatMessage) => {
+        queryString += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`
+      })
+      queryString += '\n'
+    }
+    
+    // Add current question
+    queryString += `Current question: ${message}`
+
+    console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
 
     // Prepare the request to Dappier API
     const dappierRequest: DappierRequest = {
-      messages,
-      model: 'gpt-4', // You may need to adjust this based on Dappier's available models
-      max_tokens: 1000,
-      temperature: 0.7
+      query: queryString
     }
 
-    // Make the request to Dappier API
-    const dappierResponse = await fetch('https://api.dappier.com/app/datamodelconversation', {
+    // Make the request to Dappier API using the endpoint from your example
+    const dappierResponse = await fetch('https://api.dappier.com/app/datamodel/dm_01jwet98pxe1mbkdrwdfm6cm62', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${dappierApiKey}`,
@@ -128,10 +130,21 @@ Always provide practical, actionable advice while noting when users should consu
     }
 
     const dappierData: DappierResponse = await dappierResponse.json()
+    console.log('Dappier response:', dappierData)
 
-    // Extract the AI response
-    const aiResponse = dappierData.choices?.[0]?.message?.content || 
-      "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+    // Extract the AI response - adjust based on actual Dappier response format
+    let aiResponse = ''
+    
+    if (dappierData.response) {
+      aiResponse = dappierData.response
+    } else if (dappierData.data && typeof dappierData.data === 'string') {
+      aiResponse = dappierData.data
+    } else if (dappierData.data && dappierData.data.response) {
+      aiResponse = dappierData.data.response
+    } else {
+      console.log('Unexpected Dappier response format:', dappierData)
+      aiResponse = "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+    }
 
     // Return the response
     return new Response(
