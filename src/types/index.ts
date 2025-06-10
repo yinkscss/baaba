@@ -77,7 +77,7 @@ export interface DashboardStats {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'property' | 'application' | 'payment' | 'system';
+  type: 'property' | 'application' | 'payment' | 'system' | 'inspection_request';
   message: string;
   read: boolean;
   createdAt: string;
@@ -141,8 +141,20 @@ export interface InspectionRequest {
   status: 'new' | 'approved' | 'rejected';
   createdAt: string;
   updatedAt: string;
-  property?: Property;
-  tenant?: User;
+  property?: {
+    id: string;
+    title: string;
+    address: string;
+  };
+  tenant?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    schoolIdVerified?: boolean;
+    phoneVerified?: boolean;
+  };
 }
 
 export interface EscrowTransaction {

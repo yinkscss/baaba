@@ -521,6 +521,11 @@ export function useInspectionRequests(propertyId?: string) {
           status,
           created_at,
           updated_at,
+          property_title,
+          property_address,
+          tenant_name,
+          tenant_email,
+          tenant_phone,
           properties!property_id (
             id,
             title,
@@ -554,15 +559,19 @@ export function useInspectionRequests(propertyId?: string) {
         status: request.status,
         createdAt: request.created_at,
         updatedAt: request.updated_at,
-        property: request.properties,
+        property: {
+          id: request.properties?.id || request.property_id,
+          title: request.property_title || request.properties?.title || 'Unknown Property',
+          address: request.property_address || request.properties?.address || 'Unknown Address'
+        },
         tenant: {
-          id: request.users.id,
-          firstName: request.users.first_name,
-          lastName: request.users.last_name,
-          email: request.users.email,
-          phoneNumber: request.users.phone_number,
-          schoolIdVerified: request.users.school_id_verified,
-          phoneVerified: request.users.phone_verified
+          id: request.users?.id || request.tenant_id,
+          firstName: request.users?.first_name || request.tenant_name?.split(' ')[0] || 'Unknown',
+          lastName: request.users?.last_name || request.tenant_name?.split(' ').slice(1).join(' ') || '',
+          email: request.users?.email || request.tenant_email || 'unknown@email.com',
+          phoneNumber: request.users?.phone_number || request.tenant_phone,
+          schoolIdVerified: request.users?.school_id_verified || false,
+          phoneVerified: request.users?.phone_verified || false
         }
       })) as InspectionRequest[];
     }
