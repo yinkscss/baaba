@@ -71,8 +71,8 @@ serve(async (req) => {
       )
     }
 
-    // SIMPLIFIED QUERY FOR TESTING
-    let queryString = "test query"
+    // UPDATED QUERY FOR TESTING
+    let queryString = "What is tenancy law?"
 
     // Check if queryString is empty before sending
     if (!queryString || queryString.trim().length === 0) {
