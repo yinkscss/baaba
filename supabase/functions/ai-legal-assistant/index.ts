@@ -11,12 +11,6 @@ interface ChatMessage {
   content: string
 }
 
-interface DappierRequest {
-  src: {
-    query: string
-  }
-}
-
 interface DappierResponse {
   results?: any
   response?: string
@@ -71,8 +65,20 @@ serve(async (req) => {
       )
     }
 
-    // UPDATED QUERY FOR TESTING
-    let queryString = "What is tenancy law?"
+    // Construct the query string dynamically
+    const systemPrompt = `You are an AI legal assistant specializing in Nigerian tenancy law. Provide accurate, helpful information about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria. Always remind users that this is general information and they should consult a qualified lawyer for specific legal advice.`
+    
+    // Build conversation context
+    let conversationContext = ''
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationContext = conversationHistory
+        .map((msg: ChatMessage) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n')
+      conversationContext += '\n'
+    }
+    
+    // Combine system prompt, conversation history, and current message
+    const queryString = `${systemPrompt}\n\n${conversationContext}User: ${message}\n\nAssistant:`
 
     // Check if queryString is empty before sending
     if (!queryString || queryString.trim().length === 0) {
@@ -90,16 +96,14 @@ serve(async (req) => {
     }
 
     console.log('Query string length:', queryString.length)
-    console.log('Sending query to Dappier:', queryString)
+    console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
 
-    // Prepare the request to Dappier API with the correct structure
-    const dappierRequest: DappierRequest = {
-      src: {
-        query: queryString
-      }
+    // Prepare the request to Dappier API with the correct structure (direct query field)
+    const dappierRequestBody = {
+      query: queryString
     }
 
-    console.log('Dappier request structure:', JSON.stringify(dappierRequest, null, 2))
+    console.log('Dappier request structure:', JSON.stringify(dappierRequestBody, null, 2))
 
     // Make the request to Dappier API using the endpoint from your example
     const dappierResponse = await fetch('https://api.dappier.com/app/datamodel/dm_01jwet98pxe1mbkdrwdfm6cm62', {
@@ -108,7 +112,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${dappierApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(dappierRequest)
+      body: JSON.stringify(dappierRequestBody)
     })
 
     if (!dappierResponse.ok) {
