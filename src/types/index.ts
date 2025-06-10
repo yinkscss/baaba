@@ -203,3 +203,15 @@ export interface Message {
   read: boolean;
   sender?: User;
 }
+
+// AI Legal Assistant types
+export interface AILegalResponse {
+  response: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}

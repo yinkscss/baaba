@@ -7,6 +7,7 @@ import { FaqSection } from '../../components/ui/faq-section';
 import { PlaceholdersAndVanishInput } from '../../components/ui/placeholders-and-vanish-input';
 import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage, ChatBubbleAction, ChatBubbleActionWrapper } from '../../components/ui/chat-bubble';
 import { TextShimmer } from '../../components/ui/text-shimmer';
+import { supabase } from '../../lib/supabase';
 
 type Message = {
   id: string;
@@ -15,24 +16,18 @@ type Message = {
   timestamp: Date;
 };
 
-const AI_RESPONSES: Record<string, string> = {
-  'default': "Hello! I'm your AI Legal Assistant specializing in tenancy law. How can I help you today?",
-  'rent': "Landlords typically can't increase rent during an active lease term unless specified in the agreement. For yearly leases, they must provide adequate notice before renewal.",
-  'deposit': "Security deposits are typically 1-2 months' rent. Landlords must return this deposit within 30 days of lease termination, minus any legitimate deductions for damages beyond normal wear and tear.",
-  'eviction': "For eviction, landlords must provide proper notice and obtain a court order before forcibly evicting you. Self-help evictions (changing locks, removing belongings, disconnecting utilities) are illegal."
-};
-
 const LegalAssistantPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: AI_RESPONSES['default'],
+      content: "Hello! I'm your AI Legal Assistant specializing in Nigerian tenancy law. I can help you understand your rights as a tenant, landlord obligations, lease agreements, and housing disputes. How can I assist you today?",
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,10 +39,10 @@ const LegalAssistantPage: React.FC = () => {
     }
   }, [messages, isLoading]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
     
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -57,33 +52,57 @@ const LegalAssistantPage: React.FC = () => {
     };
     
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputMessage;
     setInputMessage('');
     setIsLoading(true);
+    setError(null);
     
-    // Simulate AI response
-    setTimeout(() => {
-      let responseContent = AI_RESPONSES['default'];
-      
-      // Check for keywords in the message to provide relevant responses
-      const lowerCaseMsg = inputMessage.toLowerCase();
-      if (lowerCaseMsg.includes('rent increase') || lowerCaseMsg.includes('raise rent')) {
-        responseContent = AI_RESPONSES['rent'];
-      } else if (lowerCaseMsg.includes('deposit') || lowerCaseMsg.includes('security')) {
-        responseContent = AI_RESPONSES['deposit'];
-      } else if (lowerCaseMsg.includes('evict') || lowerCaseMsg.includes('kick out')) {
-        responseContent = AI_RESPONSES['eviction'];
+    try {
+      // Prepare conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+
+      // Call the Supabase Edge Function
+      const { data, error: functionError } = await supabase.functions.invoke('ai-legal-assistant', {
+        body: {
+          message: currentInput,
+          conversationHistory
+        }
+      });
+
+      if (functionError) {
+        throw new Error(functionError.message || 'Failed to get AI response');
       }
+
+      const aiResponse = data?.response || "I apologize, but I couldn't process your request. Please try again.";
       
       const aiMessage: Message = {
-        id: Date.now().toString(),
+        id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: responseContent,
+        content: aiResponse,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, aiMessage]);
+      
+    } catch (err) {
+      console.error('Error calling AI legal assistant:', err);
+      setError('Failed to get AI response. Please try again.');
+      
+      // Add an error message to the chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: "I apologize, but I'm experiencing technical difficulties. Please try again later or contact our support team for assistance with your legal question.",
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -93,15 +112,19 @@ const LegalAssistantPage: React.FC = () => {
   const faqItems = [
     {
       question: "What are my rights regarding rent increases?",
-      answer: AI_RESPONSES['rent']
+      answer: "In Nigeria, landlords typically cannot increase rent during an active lease term unless specifically stated in the lease agreement. For yearly leases, landlords must provide adequate notice (usually 3-6 months) before lease renewal and any rent increase. The increase should be reasonable and in line with market rates."
     },
     {
       question: "How do security deposits work in Nigeria?",
-      answer: AI_RESPONSES['deposit']
+      answer: "Security deposits in Nigeria are typically 1-2 months' rent, paid upfront along with the first year's rent. Landlords must return this deposit within 30 days of lease termination, minus any legitimate deductions for damages beyond normal wear and tear. Always document the property's condition at move-in and move-out."
     },
     {
       question: "What is the eviction process in Nigeria?",
-      answer: AI_RESPONSES['eviction']
+      answer: "For eviction in Nigeria, landlords must provide proper notice (usually 3-6 months for yearly tenancies) and obtain a court order before forcibly evicting tenants. Self-help evictions (changing locks, removing belongings, disconnecting utilities) are illegal. Tenants have the right to contest evictions in court."
+    },
+    {
+      question: "What should be included in my lease agreement?",
+      answer: "A proper lease agreement should include: property description, rent amount and payment terms, lease duration, security deposit details, maintenance responsibilities, utility arrangements, termination clauses, and both parties' rights and obligations. Always read and understand all terms before signing."
     }
   ];
 
@@ -110,7 +133,10 @@ const LegalAssistantPage: React.FC = () => {
     "How do security deposits work?",
     "What are my rights as a tenant?",
     "Can my landlord evict me without notice?",
-    "What should be in my lease agreement?"
+    "What should be in my lease agreement?",
+    "Help with a housing dispute...",
+    "Landlord won't fix maintenance issues...",
+    "Questions about utility bills..."
   ];
 
   return (
@@ -125,7 +151,7 @@ const LegalAssistantPage: React.FC = () => {
             AI Legal Assistant
           </TextShimmer>
           <p className="text-text-secondary">
-            Get expert advice on Nigerian tenancy law and resolve housing disputes with our AI legal assistant.
+            Get expert advice on Nigerian tenancy law and resolve housing disputes with our AI legal assistant powered by advanced language models.
           </p>
         </div>
 
@@ -200,6 +226,13 @@ const LegalAssistantPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 rounded-lg bg-error-DEFAULT/10 p-4 text-error-DEFAULT">
+            {error}
+          </div>
+        )}
+
         {/* Input Area */}
         <PlaceholdersAndVanishInput
           placeholders={placeholders}
@@ -209,7 +242,7 @@ const LegalAssistantPage: React.FC = () => {
 
         <div className="mt-4 text-center text-xs text-text-muted">
           <p>
-            This AI provides general legal information based on tenancy law, 
+            This AI provides legal information based on Nigerian tenancy law, 
             but should not be considered as formal legal advice. For specific legal issues, 
             consult with a qualified lawyer.
           </p>
