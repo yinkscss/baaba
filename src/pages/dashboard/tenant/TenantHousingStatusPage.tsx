@@ -1,14 +1,49 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
-import { Building, Phone, Calendar, Download } from 'lucide-react';
+import { Building, Phone, Calendar, Download, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
-import { useCurrentLease } from '../../../hooks/useDashboard';
+import { useCurrentLease, useEscrowTransactions, useInspectionRequests } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
 
 const TenantHousingStatusPage: React.FC = () => {
   const { user } = useAuth();
   const { data: lease, isLoading } = useCurrentLease(user?.id || '');
+  const { data: escrowTransactions, confirmTenantInspection } = useEscrowTransactions();
+  const { data: inspectionRequests } = useInspectionRequests();
+
+  // Filter escrow transactions for current lease
+  const currentEscrowTransactions = escrowTransactions?.filter(
+    transaction => transaction.leaseId === lease?.id
+  ) || [];
+
+  // Filter inspection requests for current user
+  const userInspectionRequests = inspectionRequests?.filter(
+    request => request.tenantId === user?.id
+  ) || [];
+
+  const handleConfirmInspection = async (transactionId: string) => {
+    try {
+      await confirmTenantInspection.mutateAsync(transactionId);
+    } catch (error) {
+      console.error('Failed to confirm inspection:', error);
+    }
+  };
+
+  const getInspectionStatusIcon = (status: string) => {
+    switch (status) {
+      case 'new':
+        return <Clock className="h-4 w-4 text-warning-DEFAULT" />;
+      case 'approved':
+        return <CheckCircle className="h-4 w-4 text-accent-green" />;
+      case 'rejected':
+        return <AlertTriangle className="h-4 w-4 text-error-DEFAULT" />;
+      case 'rescheduled':
+        return <Calendar className="h-4 w-4 text-accent-blue" />;
+      default:
+        return <Clock className="h-4 w-4 text-text-muted" />;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -100,6 +135,91 @@ const TenantHousingStatusPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Inspection Requests */}
+      {userInspectionRequests.length > 0 && (
+        <Card className="border border-nav">
+          <CardHeader>
+            <CardTitle>Your Inspection Requests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {userInspectionRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between rounded-lg border border-nav p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    {getInspectionStatusIcon(request.status)}
+                    <div>
+                      <p className="font-medium text-text-primary">
+                        {request.property?.title}
+                      </p>
+                      <p className="text-sm text-text-secondary">
+                        Requested: {new Date(request.requestedDate).toLocaleDateString()} at {new Date(request.requestedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <p className="text-sm text-text-secondary">
+                        Status: <span className="capitalize font-medium">{request.status.replace('_', ' ')}</span>
+                      </p>
+                      {request.status === 'rescheduled' && request.rescheduleNotes && (
+                        <p className="text-xs text-accent-blue mt-1">
+                          Rescheduled: {request.rescheduleNotes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Escrow Transactions - Inspection Confirmation */}
+      {currentEscrowTransactions.length > 0 && (
+        <Card className="border border-nav">
+          <CardHeader>
+            <CardTitle>Inspection Confirmation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {currentEscrowTransactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between rounded-lg border border-nav p-4"
+                >
+                  <div>
+                    <p className="font-medium text-text-primary">
+                      Escrow Amount: {formatCurrency(transaction.amount)}
+                    </p>
+                    <p className="text-sm text-text-secondary">
+                      Status: <span className="capitalize">{transaction.status.replace('_', ' ')}</span>
+                    </p>
+                    <p className="text-sm text-text-secondary">
+                      Initiated: {new Date(transaction.initiatedAt).toLocaleDateString()}
+                    </p>
+                    {transaction.tenantConfirmedInspection && (
+                      <p className="text-sm text-accent-green">
+                        ✓ Inspection confirmed
+                      </p>
+                    )}
+                  </div>
+                  
+                  {transaction.status === 'pending_release' && !transaction.tenantConfirmedInspection && (
+                    <Button
+                      onClick={() => handleConfirmInspection(transaction.id)}
+                      isLoading={confirmTenantInspection.isLoading}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Confirm Inspection
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

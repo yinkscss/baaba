@@ -138,9 +138,11 @@ export interface InspectionRequest {
   tenantId: string;
   requestedDate: string;
   message: string;
-  status: 'new' | 'approved' | 'rejected';
+  status: 'new' | 'approved' | 'rejected' | 'rescheduled';
   createdAt: string;
   updatedAt: string;
+  rescheduledBy?: string;
+  rescheduleNotes?: string;
   property?: {
     id: string;
     title: string;
@@ -154,6 +156,11 @@ export interface InspectionRequest {
     phoneNumber?: string;
     schoolIdVerified?: boolean;
     phoneVerified?: boolean;
+  };
+  rescheduler?: {
+    id: string;
+    firstName: string;
+    lastName: string;
   };
 }
 

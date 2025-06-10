@@ -521,6 +521,8 @@ export function useInspectionRequests(propertyId?: string) {
           status,
           created_at,
           updated_at,
+          rescheduled_by,
+          reschedule_notes,
           property_title,
           property_address,
           tenant_name,
@@ -539,6 +541,11 @@ export function useInspectionRequests(propertyId?: string) {
             phone_number,
             school_id_verified,
             phone_verified
+          ),
+          rescheduler:users!rescheduled_by (
+            id,
+            first_name,
+            last_name
           )
         `);
 
@@ -559,6 +566,8 @@ export function useInspectionRequests(propertyId?: string) {
         status: request.status,
         createdAt: request.created_at,
         updatedAt: request.updated_at,
+        rescheduledBy: request.rescheduled_by,
+        rescheduleNotes: request.reschedule_notes,
         property: {
           id: request.properties?.id || request.property_id,
           title: request.property_title || request.properties?.title || 'Unknown Property',
@@ -572,7 +581,12 @@ export function useInspectionRequests(propertyId?: string) {
           phoneNumber: request.users?.phone_number || request.tenant_phone,
           schoolIdVerified: request.users?.school_id_verified || false,
           phoneVerified: request.users?.phone_verified || false
-        }
+        },
+        rescheduler: request.rescheduler ? {
+          id: request.rescheduler.id,
+          firstName: request.rescheduler.first_name,
+          lastName: request.rescheduler.last_name
+        } : undefined
       })) as InspectionRequest[];
     }
   });
@@ -582,6 +596,36 @@ export function useInspectionRequests(propertyId?: string) {
       const { error } = await supabase
         .from('inspection_requests')
         .update({ status })
+        .eq('id', requestId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspectionRequests'] });
+    }
+  });
+
+  const rescheduleRequest = useMutation({
+    mutationFn: async ({ 
+      requestId, 
+      newRequestedDate, 
+      newMessage, 
+      rescheduledByUserId 
+    }: { 
+      requestId: string; 
+      newRequestedDate: string; 
+      newMessage: string; 
+      rescheduledByUserId: string; 
+    }) => {
+      const { error } = await supabase
+        .from('inspection_requests')
+        .update({
+          requested_date: newRequestedDate,
+          message: newMessage,
+          reschedule_notes: newMessage,
+          rescheduled_by: rescheduledByUserId,
+          status: 'rescheduled'
+        })
         .eq('id', requestId);
 
       if (error) throw error;
@@ -622,6 +666,7 @@ export function useInspectionRequests(propertyId?: string) {
   return {
     ...query,
     updateStatus,
+    rescheduleRequest,
     submitRequest
   };
 }
@@ -643,6 +688,7 @@ export function useEscrowTransactions(leaseId?: string) {
           released_at,
           created_at,
           updated_at,
+          tenant_confirmed_inspection,
           leases!lease_id (
             id,
             user_id,
@@ -668,6 +714,7 @@ export function useEscrowTransactions(leaseId?: string) {
         releasedAt: transaction.released_at,
         createdAt: transaction.created_at,
         updatedAt: transaction.updated_at,
+        tenantConfirmedInspection: transaction.tenant_confirmed_inspection,
         lease: transaction.leases
       })) as EscrowTransaction[];
     }
