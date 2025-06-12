@@ -11,7 +11,7 @@ function StackedCircularFooter() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col items-center">
           <div className="mb-8 rounded-full">
-            <LogoIcon className="h-10 w-10" />
+            <LogoIcon className="h-20 w-20" />
           </div>
           <nav className="mb-8 flex flex-wrap justify-center gap-6">
             <Link to="/" className="text-text-secondary hover:text-accent-blue">Home</Link>
