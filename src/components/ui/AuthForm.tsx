@@ -37,13 +37,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
       {/* Centered glass card */}
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-card/10 to-background backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-accent-blue/20 mb-6 shadow-lg">
-          <LogoIcon className="h-8 w-8 text-accent-blue" />
+        <div className="flex items-center justify-center w-12 h-12 rounded-full mb-6">
+          <LogoIcon className="h-8 w-8" />
         </div>
         
         {/* Title */}
         <h2 className="text-2xl font-semibold text-text-primary mb-6 text-center">
-          BAABA.COM
+          BAABA.ng
         </h2>
         
         {/* Form */}
@@ -138,7 +138,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
       <div className="relative z-10 mt-12 flex flex-col items-center text-center">
         <p className="text-text-secondary text-sm mb-2">
           Join <span className="font-medium text-text-primary">thousands</span> of
-          students who are already using BAABA.COM
+          students who are already using BAABA.ng
         </p>
         <div className="flex -space-x-2">
           <img

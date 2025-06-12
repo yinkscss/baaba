@@ -48,7 +48,7 @@ function HowToUse() {
   return (
     <section className="container mx-auto px-4 py-16">
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-text-primary md:text-4xl mb-4">How BAABA.COM Works</h2>
+        <h2 className="text-3xl font-bold text-text-primary md:text-4xl mb-4">How BAABA.ng Works</h2>
         <p className="text-text-secondary max-w-2xl mx-auto">
           Our AI-powered platform makes it easy to find safe and affordable student housing in Nigeria.
           Here's how you can get started:

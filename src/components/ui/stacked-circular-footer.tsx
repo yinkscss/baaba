@@ -10,8 +10,8 @@ function StackedCircularFooter() {
     <footer className="bg-background py-12">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col items-center">
-          <div className="mb-8 rounded-full bg-accent-blue/10 p-8">
-            <LogoIcon className="h-8 w-8 text-accent-blue" />
+          <div className="mb-8 rounded-full">
+            <LogoIcon className="h-8 w-8" />
           </div>
           <nav className="mb-8 flex flex-wrap justify-center gap-6">
             <Link to="/" className="text-text-secondary hover:text-accent-blue">Home</Link>
@@ -49,7 +49,7 @@ function StackedCircularFooter() {
           </div>
           <div className="text-center">
             <p className="text-sm text-text-muted">
-              © {new Date().getFullYear()} BAABA.COM. All rights reserved.
+              © {new Date().getFullYear()} BAABA.ng. All rights reserved.
             </p>
           </div>
         </div>

@@ -47,7 +47,7 @@ const OnboardingPage: React.FC = () => {
             className="mb-4 text-4xl font-bold md:text-5xl"
             duration={3}
           >
-            Welcome to BAABA.COM
+            Welcome to BAABA.ng
           </TextShimmer>
           <p className="text-lg text-text-secondary">
             Choose your role to get started with Nigeria's leading student housing platform

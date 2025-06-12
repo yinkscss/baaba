@@ -132,7 +132,7 @@ const DashboardLayout: React.FC = () => {
         <header className="flex h-16 items-center justify-between border-b border-nav bg-card px-6">
           <div className="flex items-center space-x-4">
             <Link to="/" className="text-xl font-bold">
-              BAABA.COM
+              BAABA.ng
             </Link>
             
             <ExpandableTabs

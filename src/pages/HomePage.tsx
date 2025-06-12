@@ -20,7 +20,10 @@ const HomePage: React.FC = () => {
     <>
       <HeroSection />
 
-      <HeroSection45 />
+      <HeroSection45 
+        badge="BAABA.ng"
+        heading="AI-Powered Solutions for Your Housing Journey"
+      />
 
       <HowToUse />
 

@@ -70,7 +70,7 @@ const RoommateLandingPage: React.FC = () => {
               
               <BlurFade delay={0.35} inView>
                 <p className="mt-6 text-lg text-text-secondary">
-                  BAABA.COM uses your Spotify and Instagram data plus lifestyle preferences to connect you with compatible students.
+                  BAABA.ng uses your Spotify and Instagram data plus lifestyle preferences to connect you with compatible students.
                 </p>
               </BlurFade>
 
@@ -113,7 +113,7 @@ const RoommateLandingPage: React.FC = () => {
       {/* How It Works */}
       <FeatureSteps
         features={howItWorksFeatures}
-        title="How BAABA.COM Works"
+        title="How BAABA.ng Works"
         autoPlayInterval={4000}
         imageHeight="h-[400px]"
         className="bg-black/30"

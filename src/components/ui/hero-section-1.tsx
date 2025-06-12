@@ -106,7 +106,7 @@ export function HeroSection() {
                   Find Your Perfect Student Home in Nigeria
                 </h1>
                 <p className="mx-auto mt-8 max-w-2xl text-balance text-lg">
-                  BAABA.COM uses AI to connect students with safe,
+                  BAABA.ng uses AI to connect students with safe,
                   affordable housing while providing legal protection and perfect
                   roommate matches.
                 </p>
