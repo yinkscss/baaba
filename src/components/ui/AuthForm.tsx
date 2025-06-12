@@ -38,7 +38,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-card/10 to-background backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
         <div className="flex items-center justify-center w-12 h-12 rounded-full mb-6">
-          <LogoIcon className="h-8 w-8" />
+          <LogoIcon className="h-20 w-20" />
         </div>
         
         {/* Title */}
