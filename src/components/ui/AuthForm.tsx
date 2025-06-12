@@ -41,10 +41,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
           <LogoIcon className="h-20 w-20" />
         </div>
         
-        {/* Title */}
-        <h2 className="text-2xl font-semibold text-text-primary mb-6 text-center">
-          BAABA.ng
-        </h2>
+        {/* Brand Text */}
+        <div className="mb-6 flex items-center justify-center">
+          <img 
+            src="/BAABA NAME copy.png" 
+            alt="BAABA.ng" 
+            className="h-6 w-auto"
+          />
+        </div>
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col w-full gap-4">

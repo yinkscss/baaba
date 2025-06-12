@@ -131,8 +131,12 @@ const DashboardLayout: React.FC = () => {
         {/* Header */}
         <header className="flex h-16 items-center justify-between border-b border-nav bg-card px-6">
           <div className="flex items-center space-x-4">
-            <Link to="/" className="text-xl font-bold">
-              BAABA.ng
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/BAABA NAME copy.png" 
+                alt="BAABA.ng" 
+                className="h-5 w-auto"
+              />
             </Link>
             
             <ExpandableTabs
