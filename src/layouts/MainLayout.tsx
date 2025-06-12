@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar } from '../components/ui/tubelight-navbar';
 import { StackedCircularFooter } from '../components/ui/stacked-circular-footer';
@@ -26,9 +26,28 @@ const MainLayout: React.FC = () => {
     <div className={`flex min-h-screen flex-col bg-background text-text-primary ${
       isRoommatePage ? 'bg-black' : ''
     }`}>
-      <NavBar items={navItems} />
-      {!user && <StickySignIn />}
-      <main className={`flex-1 ${isRoommatePage ? '' : 'pt-16 md:pt-20'}`}>
+      {/* Desktop Header */}
+      <header className="hidden md:flex items-center justify-between px-6 py-4 border-b border-nav bg-card">
+        <Link to="/" className="flex items-center">
+          <img 
+            src="/BAABA NAME copy.png" 
+            alt="BAABA.ng" 
+            className="h-6 w-auto"
+          />
+        </Link>
+        
+        <NavBar items={navItems} isFixed={false} className="mx-auto" />
+        
+        {!user && <StickySignIn isFixed={false} />}
+      </header>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden">
+        <NavBar items={navItems} isFixed={true} />
+        {!user && <StickySignIn isFixed={true} />}
+      </div>
+
+      <main className={`flex-1 ${isRoommatePage ? '' : 'pt-16 md:pt-0'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={window.location.pathname}

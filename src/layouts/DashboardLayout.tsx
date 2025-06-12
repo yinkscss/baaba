@@ -135,7 +135,7 @@ const DashboardLayout: React.FC = () => {
               <img 
                 src="/BAABA NAME copy.png" 
                 alt="BAABA.ng" 
-                className="h-5 w-auto"
+                className="h-6 w-auto"
               />
             </Link>
             

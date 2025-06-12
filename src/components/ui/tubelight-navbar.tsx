@@ -14,9 +14,10 @@ interface NavItem {
 interface NavBarProps {
   items: NavItem[]
   className?: string
+  isFixed?: boolean
 }
 
-export function NavBar({ items, className }: NavBarProps) {
+export function NavBar({ items, className, isFixed = true }: NavBarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -36,7 +37,7 @@ export function NavBar({ items, className }: NavBarProps) {
   return (
     <div
       className={cn(
-        "fixed left-1/2 -translate-x-1/2 z-50 top-4 sm:top-6",
+        isFixed ? "fixed left-1/2 -translate-x-1/2 z-50 top-4 sm:top-6" : "",
         className,
       )}
     >

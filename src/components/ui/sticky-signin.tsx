@@ -6,15 +6,15 @@ import { cn } from '../../lib/utils';
 
 interface StickySignInProps {
   className?: string;
+  isFixed?: boolean;
 }
 
-export function StickySignIn({ className }: StickySignInProps) {
+export function StickySignIn({ className, isFixed = true }: StickySignInProps) {
   const navigate = useNavigate();
 
   return (
     <div className={cn(
-      "fixed bottom-4 left-1/2 -translate-x-1/2 z-50",
-      "md:fixed md:bottom-auto md:left-auto md:right-4 md:top-4 md:translate-x-0",
+      isFixed ? "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 md:fixed md:bottom-auto md:left-auto md:right-4 md:top-4 md:translate-x-0" : "",
       className
     )}>
       <Button 
