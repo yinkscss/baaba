@@ -46,7 +46,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
           <img 
             src="/BAABA NAME copy.png" 
             alt="BAABA.ng" 
-            className="h-6 w-20"
+            className="h-6 w-30"
           />
         </div>
         
