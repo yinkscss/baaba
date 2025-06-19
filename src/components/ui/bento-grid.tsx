@@ -49,7 +49,7 @@ const BentoCard = ({
     {/* Background Image Container */}
     <div className="absolute inset-0 z-0">
       {background}
-      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
     </div>
 
     {/* Content */}
@@ -57,7 +57,7 @@ const BentoCard = ({
       <h3 className="text-xl font-semibold text-text-primary">
         {name}
       </h3>
-      <p className="max-w-lg text-text-secondary">{description}</p>
+      <p className="max-w-lg text-text-primary">{description}</p>
     </div>
 
     {/* CTA Button */}
