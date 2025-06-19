@@ -1,9 +1,25 @@
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="60" cy="60" r="60" fill="white"/>
-  <path d="M60 10 L50 30 L30 20 L40 40 L20 50 L40 60 L30 80 L50 70 L60 90 L70 70 L90 80 L80 60 L100 50 L80 40 L90 20 L70 30 L60 10 Z" fill="black"/>
-  <text x="60" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">POWERED BY</text>
-  <text x="60" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">BOLT</text>
-  <text x="60" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="white">.NEW</text>
-  <text x="60" y="75" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">MADE IN</text>
-  <text x="60" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="white">BOLT.NEW</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define the circular path for the text -->
+    <path id="circle-path" d="M 100, 100 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0" />
+  </defs>
+  
+  <!-- Outer circle border -->
+  <circle cx="100" cy="100" r="98" fill="white" stroke="black" stroke-width="4"/>
+  
+  <!-- Inner circle background -->
+  <circle cx="100" cy="100" r="85" fill="white" stroke="none"/>
+  
+  <!-- Curved text around the circle -->
+  <text font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="black">
+    <textPath href="#circle-path" startOffset="0%">
+      POWERED BY BOLT.NEW MADE IN
+    </textPath>
+  </text>
+  
+  <!-- Central "b" logo -->
+  <g transform="translate(100, 100)">
+    <!-- The "b" shape -->
+    <path d="M -20 -35 L -20 35 L -5 35 L -5 5 L 5 5 C 15 5 20 0 20 -10 C 20 -20 15 -25 5 -25 L -5 -25 L -5 -35 Z M -5 -10 L 5 -10 C 8 -10 10 -8 10 -5 C 10 -2 8 0 5 0 L -5 0 Z" fill="black"/>
+  </g>
 </svg>
