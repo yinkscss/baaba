@@ -26,28 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (sessionError) throw sessionError;
 
         if (sessionData.session) {
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', sessionData.session.user.id)
-            .maybeSingle();
-          
-          if (userError) throw userError;
-          
-          if (userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              role: userData.role,
-              firstName: userData.first_name,
-              lastName: userData.last_name,
-              phoneNumber: userData.phone_number,
-              profileImage: userData.profile_image,
-              createdAt: userData.created_at,
-              verified: userData.verified,
-              defaultLandlordId: userData.default_landlord_id
-            });
-          }
+          await handleUserSession(sessionData.session);
         }
       } catch (error) {
         console.error('Error fetching session:', error);
@@ -61,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
+        
         try {
           if (event === 'SIGNED_OUT') {
             setUser(null);
@@ -68,74 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (session) {
-            const { data: userData, error: userError } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            if (userError) throw userError;
-            
-            if (userData) {
-              setUser({
-                id: userData.id,
-                email: userData.email,
-                role: userData.role,
-                firstName: userData.first_name,
-                lastName: userData.last_name,
-                phoneNumber: userData.phone_number,
-                profileImage: userData.profile_image,
-                createdAt: userData.created_at,
-                verified: userData.verified,
-                defaultLandlordId: userData.default_landlord_id
-              });
-            } else if (event === 'SIGNED_IN' && session.user) {
-              // Handle Google OAuth user creation
-              const userMetadata = session.user.user_metadata;
-              const fullName = userMetadata.full_name || userMetadata.name || '';
-              const nameParts = fullName.split(' ');
-              const firstName = nameParts[0] || '';
-              const lastName = nameParts.slice(1).join(' ') || '';
-
-              const { error: profileError } = await supabase.from('users').insert([
-                {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  role: 'pending',
-                  first_name: firstName,
-                  last_name: lastName,
-                  profile_image: userMetadata.avatar_url || userMetadata.picture,
-                  created_at: new Date().toISOString(),
-                  verified: false
-                },
-              ]);
-              
-              if (profileError) {
-                console.error('Error creating user profile:', profileError);
-              } else {
-                // Fetch the newly created user data
-                const { data: newUserData } = await supabase
-                  .from('users')
-                  .select('*')
-                  .eq('id', session.user.id)
-                  .single();
-
-                if (newUserData) {
-                  setUser({
-                    id: newUserData.id,
-                    email: newUserData.email,
-                    role: newUserData.role,
-                    firstName: newUserData.first_name,
-                    lastName: newUserData.last_name,
-                    phoneNumber: newUserData.phone_number,
-                    profileImage: newUserData.profile_image,
-                    createdAt: newUserData.created_at,
-                    verified: newUserData.verified,
-                    defaultLandlordId: newUserData.default_landlord_id
-                  });
-                }
-              }
-            }
+            await handleUserSession(session);
           } else {
             setUser(null);
           }
@@ -150,6 +64,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authListener?.subscription.unsubscribe();
     };
   }, []);
+
+  const handleUserSession = async (session: any) => {
+    try {
+      // First, try to get existing user data
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      
+      if (userError && userError.code !== 'PGRST116') {
+        throw userError;
+      }
+      
+      if (userData) {
+        // User exists, set the user state
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          role: userData.role,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          phoneNumber: userData.phone_number,
+          profileImage: userData.profile_image,
+          createdAt: userData.created_at,
+          verified: userData.verified,
+          defaultLandlordId: userData.default_landlord_id
+        });
+      } else {
+        // User doesn't exist, create profile (likely from OAuth)
+        console.log('Creating new user profile for OAuth user');
+        
+        const userMetadata = session.user.user_metadata || {};
+        const fullName = userMetadata.full_name || userMetadata.name || '';
+        const nameParts = fullName.split(' ');
+        const firstName = nameParts[0] || userMetadata.given_name || '';
+        const lastName = nameParts.slice(1).join(' ') || userMetadata.family_name || '';
+
+        const newUserData = {
+          id: session.user.id,
+          email: session.user.email || '',
+          role: 'pending',
+          first_name: firstName,
+          last_name: lastName,
+          profile_image: userMetadata.avatar_url || userMetadata.picture,
+          created_at: new Date().toISOString(),
+          verified: false
+        };
+
+        const { data: createdUser, error: profileError } = await supabase
+          .from('users')
+          .insert([newUserData])
+          .select()
+          .single();
+        
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+          throw profileError;
+        }
+
+        if (createdUser) {
+          setUser({
+            id: createdUser.id,
+            email: createdUser.email,
+            role: createdUser.role,
+            firstName: createdUser.first_name,
+            lastName: createdUser.last_name,
+            phoneNumber: createdUser.phone_number,
+            profileImage: createdUser.profile_image,
+            createdAt: createdUser.created_at,
+            verified: createdUser.verified,
+            defaultLandlordId: createdUser.default_landlord_id
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling user session:', error);
+      throw error;
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -218,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     
     if (error) {
+      console.error('Google OAuth error:', error);
       throw new Error('Failed to sign in with Google. Please try again.');
     }
   };
