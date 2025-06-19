@@ -96,13 +96,12 @@ serve(async (req) => {
     console.log('Sending messages to Dappier:', messages.length, 'messages')
 
     // Prepare the request body for Dappier conversational API
-    // Fixed: Change model from string to object with id property
+    // Changed: Use conversational model name instead of data model ID
     const dappierRequestBody = {
       src: {
-        model: {
-          id: 'dm_01jwet98pxe1mbkdrwdfm6cm62'
-        },
-        conversation: messages
+        model: 'gpt-3.5-turbo',
+        conversation: messages,
+        datamodel: 'dm_01jwet98pxe1mbkdrwdfm6cm62'
       }
     }
 
