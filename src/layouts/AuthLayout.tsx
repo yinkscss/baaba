@@ -1,9 +1,10 @@
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AuthLayout: React.FC = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -13,10 +14,24 @@ const AuthLayout: React.FC = () => {
     );
   }
 
+  // If user is authenticated
   if (user) {
-    return <Navigate to={user.role === 'tenant' ? '/dashboard/tenant' : '/dashboard/landlord'} />;
+    // If user role is pending, redirect to onboarding
+    if (user.role === 'pending') {
+      return <Navigate to="/onboarding" />;
+    }
+    
+    // Otherwise, redirect to the appropriate dashboard based on role
+    if (user.role === 'tenant') {
+      return <Navigate to="/dashboard/tenant" />;
+    } else if (user.role === 'agent') {
+      return <Navigate to="/dashboard/agent" />;
+    } else {
+      return <Navigate to="/dashboard/landlord" />;
+    }
   }
 
+  // If not authenticated, show the auth pages (login/register)
   return <Outlet />;
 };
 
