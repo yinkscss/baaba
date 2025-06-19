@@ -41,49 +41,47 @@ export function NavBar({ items, className, isFixed = true }: NavBarProps) {
         className,
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3">
-          {items.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.name
+      <div className="flex items-center gap-3 bg-background/5 border border-nav backdrop-blur-lg py-1 px-1 rounded-full shadow-lg">
+        {items.map((item) => {
+          const Icon = item.icon
+          const isActive = activeTab === item.name
 
-            return (
-              <Link
-                key={item.name}
-                to={item.url}
-                onClick={() => setActiveTab(item.name)}
-                className={cn(
-                  "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
-                  "text-text-secondary hover:text-text-primary",
-                  isActive && "bg-nav text-text-primary",
-                )}
-              >
-                <span className="hidden md:inline">{item.name}</span>
-                <span className="md:hidden">
-                  <Icon className={item.name === "Home" ? "h-6" : item.name === "Properties" ? "h-7" : item.name === "Legal" ? "h-7" : "h-8"} strokeWidth={2.5} />
-                </span>
-                {isActive && (
-                  <motion.div
-                    layoutId="lamp"
-                    className="absolute inset-0 w-full bg-accent-blue/5 rounded-full -z-10"
-                    initial={false}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30,
-                    }}
-                  >
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-accent-blue rounded-t-full">
-                      <div className="absolute w-12 h-6 bg-accent-blue/20 rounded-full blur-md -top-2 -left-2" />
-                      <div className="absolute w-8 h-6 bg-accent-blue/20 rounded-full blur-md -top-1" />
-                      <div className="absolute w-4 h-4 bg-accent-blue/20 rounded-full blur-sm top-0 left-2" />
-                    </div>
-                  </motion.div>
-                )}
-              </Link>
-            )
-          })}
-        </div>
+          return (
+            <Link
+              key={item.name}
+              to={item.url}
+              onClick={() => setActiveTab(item.name)}
+              className={cn(
+                "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
+                "text-text-secondary hover:text-text-primary",
+                isActive && "bg-nav text-text-primary",
+              )}
+            >
+              <span className="hidden md:inline">{item.name}</span>
+              <span className="md:hidden">
+                <Icon className={item.name === "Home" ? "h-6" : item.name === "Properties" ? "h-7" : item.name === "Legal" ? "h-7" : "h-8"} strokeWidth={2.5} />
+              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="lamp"
+                  className="absolute inset-0 w-full bg-accent-blue/5 rounded-full -z-10"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                  }}
+                >
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-accent-blue rounded-t-full">
+                    <div className="absolute w-12 h-6 bg-accent-blue/20 rounded-full blur-md -top-2 -left-2" />
+                    <div className="absolute w-8 h-6 bg-accent-blue/20 rounded-full blur-md -top-1" />
+                    <div className="absolute w-4 h-4 bg-accent-blue/20 rounded-full blur-sm top-0 left-2" />
+                  </div>
+                </motion.div>
+              )}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
