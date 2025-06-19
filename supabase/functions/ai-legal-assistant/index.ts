@@ -7,18 +7,18 @@ const corsHeaders = {
 }
 
 interface ChatMessage {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   content: string
 }
 
 interface DappierResponse {
+  content?: string
   results?: any
   response?: string
   data?: any
   error?: string
   answer?: string
   text?: string
-  content?: string
 }
 
 serve(async (req) => {
@@ -65,48 +65,46 @@ serve(async (req) => {
       )
     }
 
-    // Construct the query string dynamically
+    // System prompt for Nigerian tenancy law
     const systemPrompt = `You are an AI legal assistant specializing in Nigerian tenancy law. Provide accurate, helpful information about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria. Always remind users that this is general information and they should consult a qualified lawyer for specific legal advice.`
     
-    // Build conversation context
-    let conversationContext = ''
+    // Build messages array for Dappier conversational API
+    const messages: ChatMessage[] = []
+    
+    // Add system prompt as first message
+    messages.push({
+      role: 'system',
+      content: systemPrompt
+    })
+    
+    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
-      conversationContext = conversationHistory
-        .map((msg: ChatMessage) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-        .join('\n')
-      conversationContext += '\n'
+      conversationHistory.forEach((msg: ChatMessage) => {
+        messages.push({
+          role: msg.role,
+          content: msg.content
+        })
+      })
     }
     
-    // Combine system prompt, conversation history, and current message
-    const queryString = `${systemPrompt}\n\n${conversationContext}User: ${message}\n\nAssistant:`
+    // Add current user message
+    messages.push({
+      role: 'user',
+      content: message
+    })
 
-    // Check if queryString is empty before sending
-    if (!queryString || queryString.trim().length === 0) {
-      console.error('Query string is empty after construction!')
-      return new Response(
-        JSON.stringify({ 
-          response: "I apologize, but there was an issue processing your request. Please try again.",
-          error: 'Empty query string'
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
+    console.log('Sending messages to Dappier:', messages.length, 'messages')
 
-    console.log('Query string length:', queryString.length)
-    console.log('Sending query to Dappier:', queryString.substring(0, 200) + '...')
-
-    // Prepare the request to Dappier API with the correct structure
+    // Prepare the request body for Dappier conversational API
     const dappierRequestBody = {
-      query: queryString
+      dappier_model: 'dm_01jwet98pxe1mbkdrwdfm6cm62',
+      messages: messages
     }
 
     console.log('Dappier request structure:', JSON.stringify(dappierRequestBody, null, 2))
 
-    // Make the request to Dappier API using the endpoint from your example
-    const dappierResponse = await fetch('https://api.dappier.com/app/datamodel/dm_01jwet98pxe1mbkdrwdfm6cm62', {
+    // Make the request to Dappier conversational API
+    const dappierResponse = await fetch('https://api.dappier.com/app/datamodelconversation', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${dappierApiKey}`,
@@ -117,7 +115,7 @@ serve(async (req) => {
 
     if (!dappierResponse.ok) {
       const errorText = await dappierResponse.text()
-      console.error('Dappier API error:', errorText)
+      console.error('Dappier API error:', dappierResponse.status, errorText)
       
       // Return a fallback response
       return new Response(
@@ -135,51 +133,45 @@ serve(async (req) => {
     const dappierData: DappierResponse = await dappierResponse.json()
     console.log('Dappier response:', JSON.stringify(dappierData, null, 2))
 
-    // Extract the AI response - handle the 'results' field properly
+    // Extract the AI response - prioritize 'content' field for conversational API
     let aiResponse = ''
     
-    // First, check if 'results' field exists and handle it
-    if (dappierData.hasOwnProperty('results')) {
+    // First, check for 'content' field (primary for conversational API)
+    if (dappierData.content && typeof dappierData.content === 'string') {
+      aiResponse = dappierData.content
+    }
+    // Fallback to other possible response fields
+    else if (dappierData.response) {
+      aiResponse = dappierData.response
+    } else if (dappierData.answer) {
+      aiResponse = dappierData.answer
+    } else if (dappierData.text) {
+      aiResponse = dappierData.text
+    } else if (dappierData.results) {
       if (dappierData.results === null) {
         console.log('Dappier returned null results - no specific information found')
         aiResponse = "I apologize, but I couldn't find specific information to answer your question. Could you please rephrase your question or provide more details? For complex legal matters, I recommend consulting with a qualified Nigerian lawyer who specializes in tenancy law."
-      } else if (dappierData.results) {
-        // If results is not null, try to extract content from it
-        if (typeof dappierData.results === 'string') {
-          aiResponse = dappierData.results
-        } else if (typeof dappierData.results === 'object') {
-          // Check common response keys in the results object
-          aiResponse = dappierData.results.answer || 
-                      dappierData.results.response || 
-                      dappierData.results.text || 
-                      dappierData.results.content ||
-                      JSON.stringify(dappierData.results)
-        }
+      } else if (typeof dappierData.results === 'string') {
+        aiResponse = dappierData.results
+      } else if (typeof dappierData.results === 'object') {
+        // Check common response keys in the results object
+        aiResponse = dappierData.results.answer || 
+                    dappierData.results.response || 
+                    dappierData.results.text || 
+                    dappierData.results.content ||
+                    JSON.stringify(dappierData.results)
       }
-    }
-    
-    // Fallback to other possible response fields if results didn't provide a response
-    if (!aiResponse) {
-      if (dappierData.response) {
-        aiResponse = dappierData.response
-      } else if (dappierData.answer) {
-        aiResponse = dappierData.answer
-      } else if (dappierData.text) {
-        aiResponse = dappierData.text
-      } else if (dappierData.content) {
-        aiResponse = dappierData.content
-      } else if (dappierData.data) {
-        if (typeof dappierData.data === 'string') {
-          aiResponse = dappierData.data
-        } else if (dappierData.data.response) {
-          aiResponse = dappierData.data.response
-        } else if (dappierData.data.answer) {
-          aiResponse = dappierData.data.answer
-        } else if (dappierData.data.text) {
-          aiResponse = dappierData.data.text
-        } else if (dappierData.data.content) {
-          aiResponse = dappierData.data.content
-        }
+    } else if (dappierData.data) {
+      if (typeof dappierData.data === 'string') {
+        aiResponse = dappierData.data
+      } else if (dappierData.data.response) {
+        aiResponse = dappierData.data.response
+      } else if (dappierData.data.answer) {
+        aiResponse = dappierData.data.answer
+      } else if (dappierData.data.text) {
+        aiResponse = dappierData.data.text
+      } else if (dappierData.data.content) {
+        aiResponse = dappierData.data.content
       }
     }
 
