@@ -8,6 +8,7 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { ExpandableTabs } from '../components/ui/expandable-tabs';
+import { MobileNav } from '../components/ui/mobile-nav';
 
 const DashboardLayout: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -60,6 +61,34 @@ const DashboardLayout: React.FC = () => {
         { title: 'Add Property', icon: Plus },
         { title: 'Inspection Requests', icon: Bell },
         { title: 'Payments/Earnings', icon: DollarSign },
+      ];
+
+  // Mobile navigation items
+  const mobileNavItems = isTenant
+    ? [
+        { title: 'Dashboard', path: '/dashboard/tenant', icon: <Home size={20} /> },
+        { title: 'Housing Status', path: '/dashboard/tenant/housing-status', icon: <Key size={20} /> },
+        { title: 'Payments', path: '/dashboard/tenant/payments', icon: <CreditCard size={20} /> },
+        { title: 'Properties', path: '/dashboard/tenant/properties', icon: <Building size={20} /> },
+        { title: 'Roommates', path: '/dashboard/tenant/roommate-matching', icon: <Users size={20} /> },
+        { title: 'Legal Assistant', path: '/dashboard/tenant/legal-assistant', icon: <FileText size={20} /> },
+        { title: 'Complaints', path: '/dashboard/tenant/complaints', icon: <Bell size={20} /> },
+      ]
+    : isAgent
+    ? [
+        { title: 'Dashboard', path: '/dashboard/agent', icon: <Home size={20} /> },
+        { title: 'Managed Properties', path: '/dashboard/agent/managed-properties', icon: <LayoutGrid size={20} /> },
+        { title: 'Add Property', path: '/dashboard/landlord/add-property', icon: <Plus size={20} /> },
+        { title: 'Inspection Requests', path: '/dashboard/agent/inspection-requests', icon: <Bell size={20} /> },
+        { title: 'Payments/Earnings', path: '/dashboard/agent/payments-earnings', icon: <DollarSign size={20} /> },
+        { title: 'Commissions', path: '/dashboard/agent/commissions', icon: <CreditCard size={20} /> },
+      ]
+    : [
+        { title: 'Dashboard', path: '/dashboard/landlord', icon: <Home size={20} /> },
+        { title: 'My Properties', path: '/dashboard/landlord/my-properties', icon: <LayoutGrid size={20} /> },
+        { title: 'Add Property', path: '/dashboard/landlord/add-property', icon: <Plus size={20} /> },
+        { title: 'Inspection Requests', path: '/dashboard/landlord/inspection-requests', icon: <Bell size={20} /> },
+        { title: 'Payments/Earnings', path: '/dashboard/landlord/payments-earnings', icon: <DollarSign size={20} /> },
       ];
 
   const handleTabChange = (index: number | null) => {
@@ -139,12 +168,20 @@ const DashboardLayout: React.FC = () => {
               />
             </Link>
             
-            <ExpandableTabs
-              tabs={dashboardNavItems}
-              activeColor="text-accent-blue"
-              className="border-nav bg-nav/10"
-              onChange={handleTabChange}
-            />
+            {/* Mobile Navigation */}
+            <div className="md:hidden">
+              <MobileNav items={mobileNavItems} />
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <ExpandableTabs
+                tabs={dashboardNavItems}
+                activeColor="text-accent-blue"
+                className="border-nav bg-nav/10"
+                onChange={handleTabChange}
+              />
+            </div>
           </div>
 
           {/* User menu */}

@@ -39,6 +39,7 @@ import InspectionRequestsPage from './pages/dashboard/landlord/InspectionRequest
 import MyPropertiesPage from './pages/dashboard/landlord/MyPropertiesPage';
 import LandlordSettingsPage from './pages/dashboard/landlord/LandlordSettingsPage';
 import AgentSettingsPage from './pages/dashboard/agent/AgentSettingsPage';
+import ManagedPropertiesPage from './pages/dashboard/agent/ManagedPropertiesPage';
 
 // Renamed Payment/Earnings Pages
 import AgentPaymentsEarningsPage from './pages/dashboard/agent/PaymentsEarningsPage';
@@ -266,7 +267,7 @@ function App() {
           path="/dashboard/agent/managed-properties" 
           element={
             <ProtectedRoute requiredRole="agent">
-              <MyPropertiesPage />
+              <ManagedPropertiesPage />
             </ProtectedRoute>
           } 
         />

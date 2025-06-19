@@ -7,13 +7,14 @@ import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { DashboardCard } from '../../../components/dashboard/DashboardCard';
 import { NotificationsList } from '../../../components/dashboard/NotificationsList';
-import { useDashboardStats } from '../../../hooks/useDashboard';
+import { useDashboardStats, useAgentManagedProperties } from '../../../hooks/useDashboard';
 import { formatCurrency } from '../../../lib/utils';
 
 const AgentDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stats, isLoading } = useDashboardStats(user?.id || '');
+  const { data: managedProperties } = useAgentManagedProperties(user?.id || '');
 
   const quickActions = [
     {
@@ -21,7 +22,7 @@ const AgentDashboardPage: React.FC = () => {
       icon: <Building className="h-5 w-5 text-accent-blue" />,
       description: 'View and manage properties under your supervision',
       path: '/dashboard/agent/managed-properties',
-      count: stats?.totalProperties || 0
+      count: managedProperties?.length || 0
     },
     {
       title: 'Add New Property',
@@ -77,7 +78,7 @@ const AgentDashboardPage: React.FC = () => {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           title="Managed Properties"
-          value={stats?.totalProperties || 0}
+          value={managedProperties?.length || 0}
           icon={<Building className="h-4 w-4" />}
           description={`${stats?.activeApplications || 0} active listings`}
         />
@@ -86,7 +87,7 @@ const AgentDashboardPage: React.FC = () => {
           title="Total Revenue"
           value={formatCurrency(stats?.totalIncome || 0)}
           icon={<CreditCard className="h-4 w-4" />}
-          description={`From ${stats?.totalProperties || 0} properties`}
+          description={`From ${managedProperties?.length || 0} properties`}
         />
 
         <DashboardCard

@@ -5,17 +5,16 @@ import { Plus, Search, Filter, Building, Edit, Trash2, Eye } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
-import { PropertyCard } from '../../../components/ui/property-card';
 import { useAuth } from '../../../context/AuthContext';
-import { useLandlordProperties } from '../../../hooks/useDashboard';
+import { useAgentManagedProperties } from '../../../hooks/useDashboard';
 import type { Property } from '../../../types';
 import { PropertyEditForm } from '../../../components/forms/PropertyEditForm';
 import { DeletePropertyConfirmation } from '../../../components/forms/DeletePropertyConfirmation';
 
-const MyPropertiesPage: React.FC = () => {
+const ManagedPropertiesPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: properties, isLoading, updateProperty, deleteProperty } = useLandlordProperties(user?.id || '');
+  const { data: properties, isLoading, updateProperty, deleteProperty } = useAgentManagedProperties(user?.id || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<Property['status'] | 'all'>('all');
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -83,10 +82,10 @@ const MyPropertiesPage: React.FC = () => {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
-            My Properties
+            Managed Properties
           </h1>
           <p className="mt-1 text-text-secondary">
-            Manage and track your property listings
+            Manage properties on behalf of your landlord clients
           </p>
         </div>
         <Button onClick={() => navigate('/dashboard/landlord/add-property')}>
@@ -293,4 +292,4 @@ const MyPropertiesPage: React.FC = () => {
   );
 };
 
-export default MyPropertiesPage;
+export default ManagedPropertiesPage;
