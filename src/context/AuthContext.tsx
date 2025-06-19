@@ -199,10 +199,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // Get the current URL to determine the correct redirect
+    const currentUrl = window.location.origin;
+    
+    // For development, ensure we use the correct port
+    let redirectUrl = currentUrl;
+    if (currentUrl.includes('localhost')) {
+      // Extract the port from the current URL
+      const port = window.location.port || '5173';
+      redirectUrl = `http://localhost:${port}`;
+    }
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/onboarding`
+        redirectTo: `${redirectUrl}/onboarding`
       }
     });
     
