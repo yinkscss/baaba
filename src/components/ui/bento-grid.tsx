@@ -49,7 +49,7 @@ const BentoCard = ({
     {/* Background Image Container */}
     <div className="absolute inset-0 z-0">
       {background}
-      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-card via-card/80 to-transparent" />
     </div>
 
     {/* Content - Higher z-index to appear above gradient */}
