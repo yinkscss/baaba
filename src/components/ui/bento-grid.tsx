@@ -49,21 +49,21 @@ const BentoCard = ({
     {/* Background Image Container */}
     <div className="absolute inset-0 z-0">
       {background}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent" />
     </div>
 
-    {/* Content */}
-    <div className="relative z-10 flex transform-gpu flex-col gap-1 p-6 transition-all duration-300 group-hover:-translate-y-10">
-      <h3 className="text-xl font-semibold text-text-primary">
+    {/* Content - Higher z-index to appear above gradient */}
+    <div className="relative z-20 flex transform-gpu flex-col gap-1 p-6 transition-all duration-300 group-hover:-translate-y-10">
+      <h3 className="text-xl font-semibold text-white">
         {name}
       </h3>
-      <p className="max-w-lg text-text-primary">{description}</p>
+      <p className="max-w-lg text-white/90">{description}</p>
     </div>
 
-    {/* CTA Button */}
+    {/* CTA Button - Higher z-index to appear above gradient */}
     <div
       className={cn(
-        "absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100",
+        "absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 z-20",
       )}
     >
       <Button variant="secondary" className="hover:bg-accent-blue hover:text-background" asChild>
@@ -75,7 +75,7 @@ const BentoCard = ({
     </div>
 
     {/* Hover Overlay */}
-    <div className="absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-nav/10" />
+    <div className="absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-nav/10 z-10" />
   </div>
 );
 
