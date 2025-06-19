@@ -915,7 +915,7 @@ export function useProperty(propertyId: string) {
 }
 
 // New hook for agent-managed properties
-function useAgentManagedProperties(agentId: string) {
+export function useAgentManagedProperties(agentId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1066,7 +1066,7 @@ export function useCommissions(agentId: string) {
 }
 
 // New hook for verification requests
-function useVerificationRequests() {
+export function useVerificationRequests() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1197,7 +1197,7 @@ function useVerificationRequests() {
 }
 
 // New hook for managed landlords (for agents)
-function useManagedLandlords(agentId: string) {
+export function useManagedLandlords(agentId: string) {
   return useQuery({
     queryKey: ['managedLandlords', agentId],
     queryFn: async () => {
@@ -1232,7 +1232,7 @@ function useManagedLandlords(agentId: string) {
 }
 
 // New hooks for messaging functionality
-function useConversations(userId: string) {
+export function useConversations(userId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -1364,7 +1364,7 @@ function useConversations(userId: string) {
   };
 }
 
-function useMessages(conversationId: string) {
+export function useMessages(conversationId: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
