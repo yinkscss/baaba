@@ -6,6 +6,7 @@ import type {
   InspectionRequest, EscrowTransaction, Property,
   Conversation, Message, ConversationParticipant
 } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Add Commission type
 export interface Commission {
@@ -214,7 +215,7 @@ export function useNotifications(userId: string) {
   };
 }
 
-function useActivities(userId: string) {
+export function useActivities(userId: string) {
   return useQuery({
     queryKey: ['activities', userId],
     queryFn: async () => {
@@ -810,9 +811,84 @@ export function useLandlordProperties(landlordId: string) {
     }
   });
 
+  const updateProperty = useMutation({
+    mutationFn: async ({ propertyId, updates }: { propertyId: string; updates: Partial<Property> }) => {
+      // Convert from camelCase to snake_case for Supabase
+      const supabaseUpdates: any = {
+        title: updates.title,
+        description: updates.description,
+        price: updates.price,
+        location: updates.location,
+        address: updates.address,
+        bedrooms: updates.bedrooms,
+        bathrooms: updates.bathrooms,
+        size: updates.size,
+        amenities: updates.amenities,
+        images: updates.images,
+        available: updates.available,
+        featured: updates.featured,
+        status: updates.status
+      };
+
+      // Remove undefined values
+      Object.keys(supabaseUpdates).forEach(key => {
+        if (supabaseUpdates[key] === undefined) {
+          delete supabaseUpdates[key];
+        }
+      });
+
+      const { data, error } = await supabase
+        .from('properties')
+        .update(supabaseUpdates)
+        .eq('id', propertyId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landlordProperties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property'] });
+    }
+  });
+
+  const deleteProperty = useMutation({
+    mutationFn: async (propertyId: string) => {
+      // First, get the property to check if it has images
+      const { data: property, error: fetchError } = await supabase
+        .from('properties')
+        .select('images')
+        .eq('id', propertyId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete the property
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      // Note: In a production app, you might want to also delete the images from storage
+      // but we'll skip that for simplicity
+      return property;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landlordProperties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+    }
+  });
+
   return {
     ...query,
-    updatePropertyStatus
+    updatePropertyStatus,
+    updateProperty,
+    deleteProperty
   };
 }
 
@@ -968,9 +1044,84 @@ export function useAgentManagedProperties(agentId: string) {
     }
   });
 
+  const updateProperty = useMutation({
+    mutationFn: async ({ propertyId, updates }: { propertyId: string; updates: Partial<Property> }) => {
+      // Convert from camelCase to snake_case for Supabase
+      const supabaseUpdates: any = {
+        title: updates.title,
+        description: updates.description,
+        price: updates.price,
+        location: updates.location,
+        address: updates.address,
+        bedrooms: updates.bedrooms,
+        bathrooms: updates.bathrooms,
+        size: updates.size,
+        amenities: updates.amenities,
+        images: updates.images,
+        available: updates.available,
+        featured: updates.featured,
+        status: updates.status
+      };
+
+      // Remove undefined values
+      Object.keys(supabaseUpdates).forEach(key => {
+        if (supabaseUpdates[key] === undefined) {
+          delete supabaseUpdates[key];
+        }
+      });
+
+      const { data, error } = await supabase
+        .from('properties')
+        .update(supabaseUpdates)
+        .eq('id', propertyId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agentManagedProperties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property'] });
+    }
+  });
+
+  const deleteProperty = useMutation({
+    mutationFn: async (propertyId: string) => {
+      // First, get the property to check if it has images
+      const { data: property, error: fetchError } = await supabase
+        .from('properties')
+        .select('images')
+        .eq('id', propertyId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete the property
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      // Note: In a production app, you might want to also delete the images from storage
+      // but we'll skip that for simplicity
+      return property;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agentManagedProperties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+    }
+  });
+
   return {
     ...query,
-    updatePropertyStatus
+    updatePropertyStatus,
+    updateProperty,
+    deleteProperty
   };
 }
 
