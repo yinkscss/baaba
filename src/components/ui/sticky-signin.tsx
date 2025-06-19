@@ -19,10 +19,10 @@ export function StickySignIn({ className, isFixed = true }: StickySignInProps) {
     )}>
       <Button 
         onClick={() => navigate('/login')}
-        className="shadow-lg"
+        className="shadow-lg text-white"
       >
-        <LogIn className="mr-2 h-4 w-4" />
-        Sign in
+        <LogIn className="mr-2 h-4 w-4 text-white" />
+        <span className="text-white">Sign in</span>
       </Button>
     </div>
   );
