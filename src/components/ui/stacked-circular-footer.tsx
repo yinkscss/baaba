@@ -65,7 +65,7 @@ function StackedCircularFooter() {
           title="Powered by Bolt.new"
         >
           <img 
-            src="/bolt-badge.svg" 
+            src="/white_circle_360x360 copy.png" 
             alt="Powered by Bolt.new" 
             className="w-16 h-16 opacity-80 hover:opacity-100 transition-opacity"
           />
