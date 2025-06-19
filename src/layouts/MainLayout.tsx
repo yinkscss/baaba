@@ -27,7 +27,7 @@ const MainLayout: React.FC = () => {
       isRoommatePage ? 'bg-black' : ''
     }`}>
       {/* Desktop Header */}
-      <header className="hidden md:flex items-center justify-between px-6 py-4 border-b border-nav bg-card">
+      <header className="hidden md:flex items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center">
           <img 
             src="/BAABA NAME copy.png" 
@@ -36,18 +36,18 @@ const MainLayout: React.FC = () => {
           />
         </Link>
         
-        <NavBar items={navItems} isFixed={false} className="mx-auto" />
+        <NavBar items={navItems} isFixed={true} className="mx-auto" />
         
-        {!user && <StickySignIn isFixed={false} />}
+        <StickySignIn isFixed={false} />
       </header>
 
       {/* Mobile Navigation */}
       <div className="md:hidden">
         <NavBar items={navItems} isFixed={true} />
-        {!user && <StickySignIn isFixed={true} />}
+        <StickySignIn isFixed={true} />
       </div>
 
-      <main className={`flex-1 ${isRoommatePage ? '' : 'pt-16 md:pt-0'}`}>
+      <main className={`flex-1 ${isRoommatePage ? '' : 'pt-16 md:pt-20'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={window.location.pathname}
