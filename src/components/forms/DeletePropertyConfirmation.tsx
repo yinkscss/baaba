@@ -17,6 +17,14 @@ export function DeletePropertyConfirmation({
   onCancel,
   isLoading
 }: DeletePropertyConfirmationProps) {
+  const handleConfirmClick = async () => {
+    try {
+      await onConfirm();
+    } catch (error) {
+      console.error('Error deleting property:', error);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -31,7 +39,7 @@ export function DeletePropertyConfirmation({
               <AlertTriangle className="mr-2 h-5 w-5" />
               Delete Property
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={onCancel}>
+            <Button variant="ghost" size="sm" onClick={onCancel} disabled={isLoading}>
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
@@ -50,13 +58,14 @@ export function DeletePropertyConfirmation({
                   type="button"
                   variant="outline"
                   onClick={onCancel}
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="button" 
                   variant="danger"
-                  onClick={onConfirm}
+                  onClick={handleConfirmClick}
                   isLoading={isLoading}
                 >
                   Delete Property

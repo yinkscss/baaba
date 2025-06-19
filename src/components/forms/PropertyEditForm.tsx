@@ -8,6 +8,8 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import type { Property } from '../../types';
+import { supabase } from '../../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -37,6 +39,7 @@ export function PropertyEditForm({ property, onSubmit, onCancel, isLoading }: Pr
   const [newAmenity, setNewAmenity] = useState('');
   const [previewImages, setPreviewImages] = useState<string[]>(property.images || []);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
@@ -79,31 +82,63 @@ export function PropertyEditForm({ property, onSubmit, onCancel, isLoading }: Pr
 
   const handleRemoveImage = (index: number) => {
     setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    
     // If it's a new file, remove from selectedFiles
-    if (index >= (property.images?.length || 0)) {
-      const fileIndex = index - (property.images?.length || 0);
+    if (index >= property.images.length) {
+      const fileIndex = index - property.images.length;
       setSelectedFiles(prev => prev.filter((_, i) => i !== fileIndex));
     }
   };
 
+  const uploadImages = async (files: File[]): Promise<string[]> => {
+    if (files.length === 0) return [];
+    
+    const uploadPromises = files.map(async (file) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${property.landlordId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('property_images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('property_images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    });
+
+    return Promise.all(uploadPromises);
+  };
+
   const onFormSubmit = async (data: PropertyFormData) => {
     try {
-      // Handle image uploads if there are new files
-      let imageUrls = [...(property.images || [])];
+      setUploadingImages(true);
       
-      if (selectedFiles.length > 0) {
-        // In a real implementation, you would upload files to storage here
-        // For now, we'll keep the existing images
-        console.log('New files to upload:', selectedFiles);
-      }
-
+      // Determine which original images to keep
+      const keptOriginalImages = property.images.filter((_, index) => 
+        previewImages.includes(property.images[index])
+      );
+      
+      // Upload new images
+      const newImageUrls = await uploadImages(selectedFiles);
+      
+      // Combine kept original images with new uploaded images
+      const allImages = [...keptOriginalImages, ...newImageUrls];
+      
       await onSubmit({
         ...data,
         amenities,
-        images: imageUrls
+        images: allImages
       });
+      
+      setUploadingImages(false);
     } catch (error) {
       console.error('Error updating property:', error);
+      setUploadingImages(false);
     }
   };
 
@@ -328,10 +363,14 @@ export function PropertyEditForm({ property, onSubmit, onCancel, isLoading }: Pr
                   type="button"
                   variant="outline"
                   onClick={onCancel}
+                  disabled={isLoading || uploadingImages}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" isLoading={isLoading}>
+                <Button 
+                  type="submit" 
+                  isLoading={isLoading || uploadingImages}
+                >
                   Save Changes
                 </Button>
               </div>
