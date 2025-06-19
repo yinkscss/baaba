@@ -96,9 +96,10 @@ serve(async (req) => {
     console.log('Sending messages to Dappier:', messages.length, 'messages')
 
     // Prepare the request body for Dappier conversational API
+    // Fixed: Changed 'dappier_model' to 'model' and 'messages' to 'conversation'
     const dappierRequestBody = {
-      dappier_model: 'dm_01jwet98pxe1mbkdrwdfm6cm62',
-      messages: messages
+      model: 'dm_01jwet98pxe1mbkdrwdfm6cm62',
+      conversation: messages
     }
 
     console.log('Dappier request structure:', JSON.stringify(dappierRequestBody, null, 2))
