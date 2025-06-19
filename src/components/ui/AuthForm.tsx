@@ -4,6 +4,7 @@ import { Chrome } from 'lucide-react';
 import { LogoIcon } from '../icons/LogoIcon';
 import Input from './Input';
 import Button from './Button';
+import { useAuth } from '../../context/AuthContext';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -13,12 +14,14 @@ interface AuthFormProps {
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoading }) => {
+  const { signInWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
   });
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -30,6 +33,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onAuthSubmit(formData);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await signInWithGoogle();
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      // The error will be handled by the parent component
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -60,14 +75,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={isLoading || isGoogleLoading}
                 />
                 <Input
                   name="lastName"
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={isLoading || isGoogleLoading}
                 />
               </>
             )}
@@ -77,7 +92,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             />
             <Input
               name="password"
@@ -85,7 +100,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             />
             {error && (
               <div className="text-sm text-error-DEFAULT">{error}</div>
@@ -100,6 +115,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
               variant="primary"
               className="w-full mb-3"
               isLoading={isLoading}
+              disabled={isGoogleLoading}
             >
               {mode === 'login' ? 'Sign in' : 'Create Account'}
             </Button>
@@ -109,10 +125,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
               type="button"
               variant="outline"
               className="w-full flex items-center justify-center gap-2 mb-2"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
+              onClick={handleGoogleSignIn}
+              isLoading={isGoogleLoading}
             >
-              <Chrome size={20} />
-              Continue with Google
+              {!isGoogleLoading && <Chrome size={20} />}
+              {isGoogleLoading ? 'Processing...' : 'Continue with Google'}
             </Button>
             
             <div className="w-full text-center mt-2">
@@ -120,7 +138,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onAuthSubmit, error, isLoadin
                 {mode === 'login' ? (
                   <>
                     Don't have an account?{' '}
-                    <Link to="/register\" className="text-accent-blue hover:text-accent-blue/80">
+                    <Link to="/register" className="text-accent-blue hover:text-accent-blue/80">
                       Sign up, it's free!
                     </Link>
                   </>

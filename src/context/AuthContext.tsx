@@ -8,6 +8,7 @@ type AuthContextType = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateUserRole: (userId: string, newRole: UserRole) => Promise<void>;
 };
@@ -88,6 +89,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 verified: userData.verified,
                 defaultLandlordId: userData.default_landlord_id
               });
+            } else if (event === 'SIGNED_IN' && session.user) {
+              // Handle Google OAuth user creation
+              const userMetadata = session.user.user_metadata;
+              const fullName = userMetadata.full_name || userMetadata.name || '';
+              const nameParts = fullName.split(' ');
+              const firstName = nameParts[0] || '';
+              const lastName = nameParts.slice(1).join(' ') || '';
+
+              const { error: profileError } = await supabase.from('users').insert([
+                {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  role: 'pending',
+                  first_name: firstName,
+                  last_name: lastName,
+                  profile_image: userMetadata.avatar_url || userMetadata.picture,
+                  created_at: new Date().toISOString(),
+                  verified: false
+                },
+              ]);
+              
+              if (profileError) {
+                console.error('Error creating user profile:', profileError);
+              } else {
+                // Fetch the newly created user data
+                const { data: newUserData } = await supabase
+                  .from('users')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single();
+
+                if (newUserData) {
+                  setUser({
+                    id: newUserData.id,
+                    email: newUserData.email,
+                    role: newUserData.role,
+                    firstName: newUserData.first_name,
+                    lastName: newUserData.last_name,
+                    phoneNumber: newUserData.phone_number,
+                    profileImage: newUserData.profile_image,
+                    createdAt: newUserData.created_at,
+                    verified: newUserData.verified,
+                    defaultLandlordId: newUserData.default_landlord_id
+                  });
+                }
+              }
             }
           } else {
             setUser(null);
@@ -151,6 +198,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/onboarding`
+      }
+    });
+    
+    if (error) {
+      throw new Error('Failed to sign in with Google. Please try again.');
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -192,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, updateUserRole }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut, updateUserRole }}>
       {children}
     </AuthContext.Provider>
   );
