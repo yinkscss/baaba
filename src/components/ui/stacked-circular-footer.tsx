@@ -7,7 +7,7 @@ import { Link } from "react-router-dom"
 
 function StackedCircularFooter() {
   return (
-    <footer className="bg-background py-12">
+    <footer className="bg-background py-12 relative">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col items-center">
           <div className="mb-8 rounded-full">
@@ -53,6 +53,23 @@ function StackedCircularFooter() {
             </p>
           </div>
         </div>
+      </div>
+      
+      {/* Bolt.new Badge */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <a 
+          href="https://bolt.new" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block transition-transform hover:scale-105"
+          title="Powered by Bolt.new"
+        >
+          <img 
+            src="/bolt-badge.svg" 
+            alt="Powered by Bolt.new" 
+            className="w-16 h-16 opacity-80 hover:opacity-100 transition-opacity"
+          />
+        </a>
       </div>
     </footer>
   )
