@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 interface ChatMessage {
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant'
   content: string
 }
 
@@ -65,42 +65,35 @@ serve(async (req) => {
       )
     }
 
-    // System prompt for Nigerian tenancy law
-    const systemPrompt = `You are an AI legal assistant specializing in Nigerian tenancy law. Provide accurate, helpful information about tenant rights, landlord obligations, lease agreements, and housing disputes in Nigeria. Always remind users that this is general information and they should consult a qualified lawyer for specific legal advice.`
+    // Build conversation array for Dappier API (only user/assistant messages)
+    const conversation: ChatMessage[] = []
     
-    // Build messages array for Dappier conversational API
-    const messages: ChatMessage[] = []
-    
-    // Add system prompt as first message
-    messages.push({
-      role: 'system',
-      content: systemPrompt
-    })
-    
-    // Add conversation history
+    // Add conversation history (only user and assistant messages)
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg: ChatMessage) => {
-        messages.push({
-          role: msg.role,
-          content: msg.content
-        })
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          conversation.push({
+            role: msg.role,
+            content: msg.content
+          })
+        }
       })
     }
     
     // Add current user message
-    messages.push({
+    conversation.push({
       role: 'user',
       content: message
     })
 
-    console.log('Sending messages to Dappier:', messages.length, 'messages')
+    console.log('Sending conversation to Dappier:', conversation.length, 'messages')
 
     // Prepare the request body for Dappier conversational API
-    // Changed: Use conversational model name instead of data model ID
+    // The system prompt/context is handled by the datamodel, not in conversation
     const dappierRequestBody = {
       src: {
         model: 'gpt-3.5-turbo',
-        conversation: messages,
+        conversation: conversation,
         datamodel: 'dm_01jwet98pxe1mbkdrwdfm6cm62'
       }
     }
