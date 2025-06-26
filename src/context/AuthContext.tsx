@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { User, UserRole } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [sessionCheckAttempts, setSessionCheckAttempts] = useState(0);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -80,9 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setSessionCheckAttempts(0);
         
-        // Redirect to login if we're not already there
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-          window.location.href = '/login';
+        // Use client-side navigation instead of window.location.href
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          navigate('/login', { replace: true });
         }
       } catch (error) {
         console.error('Error during force sign out:', error);
@@ -167,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(sessionCheckTimeout);
       }
     };
-  }, [sessionCheckAttempts, queryClient]);
+  }, [sessionCheckAttempts, queryClient, navigate]);
 
   const handleUserSession = async (session: any) => {
     try {
@@ -297,20 +300,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log('🎯 Handling post-auth redirect for user:', { role: userObj.role, currentPath });
 
-    // Use setTimeout to ensure state updates are processed
+    // Use setTimeout to ensure state updates are processed and use client-side navigation
     setTimeout(() => {
       if (userObj.role === 'pending') {
         console.log('➡️ Redirecting to onboarding');
-        window.location.href = '/onboarding';
+        navigate('/onboarding', { replace: true });
       } else if (userObj.role === 'tenant') {
         console.log('➡️ Redirecting to tenant dashboard');
-        window.location.href = '/dashboard/tenant';
+        navigate('/dashboard/tenant', { replace: true });
       } else if (userObj.role === 'agent') {
         console.log('➡️ Redirecting to agent dashboard');
-        window.location.href = '/dashboard/agent';
+        navigate('/dashboard/agent', { replace: true });
       } else {
         console.log('➡️ Redirecting to landlord dashboard');
-        window.location.href = '/dashboard/landlord';
+        navigate('/dashboard/landlord', { replace: true });
       }
     }, 100);
   };
