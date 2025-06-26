@@ -48,39 +48,69 @@ import LandlordPaymentsEarningsPage from './pages/dashboard/landlord/PaymentsEar
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'tenant' | 'landlord' | 'agent' }) {
   const { user, loading } = useAuth();
   
+  console.log('🛡️ ProtectedRoute check:', { 
+    loading, 
+    hasUser: !!user, 
+    userRole: user?.role, 
+    requiredRole 
+  });
+  
+  // Show loading spinner while checking authentication
   if (loading) {
-    return <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
-    </div>;
+    console.log('⏳ ProtectedRoute: Still loading, showing spinner');
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
   }
   
+  // If no user, redirect to login
   if (!user) {
-    return <Navigate to="/login" />;
+    console.log('🚫 ProtectedRoute: No user, redirecting to login');
+    return <Navigate to="/login" replace />;
   }
 
   // If user is pending, always redirect to onboarding
   if (user.role === 'pending') {
-    return <Navigate to="/onboarding" />;
+    console.log('➡️ ProtectedRoute: User pending, redirecting to onboarding');
+    return <Navigate to="/onboarding" replace />;
   }
   
+  // Check role requirements
   if (requiredRole) {
     // For landlord/agent roles, allow access to landlord dashboard
     if ((requiredRole === 'landlord' || requiredRole === 'agent') && 
         (user.role === 'landlord' || user.role === 'agent')) {
+      console.log('✅ ProtectedRoute: Role check passed (landlord/agent)');
       return <>{children}</>;
     }
     
     // For other roles, require exact match
     if (user.role !== requiredRole) {
-      return <Navigate to="/" />;
+      console.log('❌ ProtectedRoute: Role mismatch, redirecting to home');
+      return <Navigate to="/" replace />;
     }
   }
   
+  console.log('✅ ProtectedRoute: Access granted');
   return <>{children}</>;
 }
 
 function App() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  console.log('🚀 App render:', { loading, hasUser: !!user, userRole: user?.role });
+
+  // Show loading screen while initializing auth
+  if (loading) {
+    console.log('⏳ App: Still loading auth, showing spinner');
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -107,7 +137,7 @@ function App() {
           user?.role === 'pending' ? (
             <OnboardingPage />
           ) : (
-            <Navigate to={user ? '/dashboard' : '/login'} />
+            <Navigate to={user ? '/dashboard' : '/login'} replace />
           )
         } 
       />
@@ -299,7 +329,7 @@ function App() {
               : user?.role === 'agent'
               ? '/dashboard/agent'
               : '/dashboard/landlord'
-          } />
+          } replace />
         } 
       />
 

@@ -19,22 +19,73 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionCheckAttempts, setSessionCheckAttempts] = useState(0);
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let mounted = true;
+    let sessionCheckTimeout: NodeJS.Timeout;
+
     const getSession = async () => {
       try {
+        console.log('🔍 Checking session...', { attempt: sessionCheckAttempts + 1 });
+        
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+        
+        if (sessionError) {
+          console.error('❌ Session error:', sessionError);
+          throw sessionError;
+        }
 
-        if (sessionData.session) {
+        console.log('📋 Session data:', { 
+          hasSession: !!sessionData.session, 
+          userId: sessionData.session?.user?.id,
+          userEmail: sessionData.session?.user?.email 
+        });
+
+        if (sessionData.session && mounted) {
           await handleUserSession(sessionData.session);
+        } else if (mounted) {
+          console.log('🚫 No active session found');
+          setUser(null);
         }
       } catch (error) {
-        console.error('Error fetching session:', error);
-        setUser(null);
+        console.error('💥 Error fetching session:', error);
+        
+        // Increment session check attempts
+        setSessionCheckAttempts(prev => prev + 1);
+        
+        // If we've had multiple failed attempts, force sign out to prevent infinite loops
+        if (sessionCheckAttempts >= 3) {
+          console.error('🔄 Too many failed session attempts, forcing sign out');
+          await forceSignOut();
+          return;
+        }
+        
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const forceSignOut = async () => {
+      try {
+        console.log('🚪 Force signing out due to session issues');
+        queryClient.clear();
+        await supabase.auth.signOut();
+        setUser(null);
+        setSessionCheckAttempts(0);
+        
+        // Redirect to login if we're not already there
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Error during force sign out:', error);
       }
     };
 
@@ -42,33 +93,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
+        console.log('🔄 Auth state change:', { event, userId: session?.user?.id });
+        
+        // Reset session check attempts on successful auth events
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSessionCheckAttempts(0);
+        }
         
         try {
           if (event === 'SIGNED_OUT') {
-            setUser(null);
+            console.log('👋 User signed out');
+            if (mounted) {
+              setUser(null);
+              queryClient.clear();
+            }
             return;
           }
 
-          if (session) {
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 Token refreshed successfully');
+          }
+
+          if (session && mounted) {
+            console.log('👤 Processing user session for event:', event);
             await handleUserSession(session);
-          } else {
+          } else if (mounted) {
+            console.log('🚫 No session in auth state change');
             setUser(null);
           }
         } catch (error) {
-          console.error('Error in auth state change:', error);
-          setUser(null);
+          console.error('💥 Error in auth state change:', error);
+          
+          // If we get an error during auth state change, increment attempts
+          setSessionCheckAttempts(prev => prev + 1);
+          
+          if (sessionCheckAttempts >= 2) {
+            console.error('🔄 Multiple auth state errors, forcing sign out');
+            await forceSignOut();
+          } else if (mounted) {
+            setUser(null);
+          }
         }
       }
     );
 
+    // Set up a session health check interval
+    const sessionHealthCheck = setInterval(async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.warn('⚠️ Session health check failed:', error);
+          setSessionCheckAttempts(prev => prev + 1);
+          
+          if (sessionCheckAttempts >= 3) {
+            console.error('🔄 Session health check failed multiple times, forcing sign out');
+            await forceSignOut();
+          }
+        } else if (session) {
+          // Reset attempts on successful health check
+          setSessionCheckAttempts(0);
+        }
+      } catch (error) {
+        console.error('💥 Session health check error:', error);
+      }
+    }, 60000); // Check every minute
+
     return () => {
+      mounted = false;
       authListener?.subscription.unsubscribe();
+      clearInterval(sessionHealthCheck);
+      if (sessionCheckTimeout) {
+        clearTimeout(sessionCheckTimeout);
+      }
     };
-  }, []);
+  }, [sessionCheckAttempts, queryClient]);
 
   const handleUserSession = async (session: any) => {
     try {
+      console.log('🔍 Handling user session for:', session.user.id);
+      
       // First, try to get existing user data
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -77,12 +181,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
       
       if (userError && userError.code !== 'PGRST116') {
+        console.error('❌ Error fetching user data:', userError);
         throw userError;
       }
       
       if (userData) {
+        console.log('✅ Existing user found:', { id: userData.id, role: userData.role });
         // User exists, set the user state
-        setUser({
+        const userObj = {
           id: userData.id,
           email: userData.email,
           role: userData.role,
@@ -93,10 +199,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: userData.created_at,
           verified: userData.verified,
           defaultLandlordId: userData.default_landlord_id
-        });
+        };
+        
+        setUser(userObj);
+        
+        // Handle post-authentication redirects
+        handlePostAuthRedirect(userObj);
       } else {
         // User doesn't exist, create profile (likely from OAuth)
-        console.log('Creating new user profile for OAuth user');
+        console.log('🆕 Creating new user profile for OAuth user');
         
         const userMetadata = session.user.user_metadata || {};
         const fullName = userMetadata.full_name || userMetadata.name || '';
@@ -122,12 +233,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
         
         if (profileError) {
-          console.error('Error creating user profile:', profileError);
+          console.error('❌ Error creating user profile:', profileError);
           throw profileError;
         }
 
         if (createdUser) {
-          setUser({
+          console.log('✅ New user created:', { id: createdUser.id, role: createdUser.role });
+          const userObj = {
             id: createdUser.id,
             email: createdUser.email,
             role: createdUser.role,
@@ -138,23 +250,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             createdAt: createdUser.created_at,
             verified: createdUser.verified,
             defaultLandlordId: createdUser.default_landlord_id
-          });
+          };
+          
+          setUser(userObj);
+          
+          // Handle post-authentication redirects
+          handlePostAuthRedirect(userObj);
         }
       }
     } catch (error) {
-      console.error('Error handling user session:', error);
+      console.error('💥 Error handling user session:', error);
       throw error;
     }
   };
 
+  const handlePostAuthRedirect = (userObj: User) => {
+    // Only handle redirects if we're currently on auth-related pages
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath === '/login' || currentPath === '/register' || currentPath === '/';
+    
+    if (!isAuthPage) {
+      console.log('🚫 Not on auth page, skipping redirect');
+      return;
+    }
+
+    console.log('🎯 Handling post-auth redirect for user:', { role: userObj.role, currentPath });
+
+    // Use setTimeout to ensure state updates are processed
+    setTimeout(() => {
+      if (userObj.role === 'pending') {
+        console.log('➡️ Redirecting to onboarding');
+        window.location.href = '/onboarding';
+      } else if (userObj.role === 'tenant') {
+        console.log('➡️ Redirecting to tenant dashboard');
+        window.location.href = '/dashboard/tenant';
+      } else if (userObj.role === 'agent') {
+        console.log('➡️ Redirecting to agent dashboard');
+        window.location.href = '/dashboard/agent';
+      } else {
+        console.log('➡️ Redirecting to landlord dashboard');
+        window.location.href = '/dashboard/landlord';
+      }
+    }, 100);
+  };
+
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 Attempting sign in for:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      console.error('❌ Sign in error:', error);
       if (error.message === 'Invalid login credentials') {
         throw new Error('Invalid email or password. Please try again.');
       }
       throw error;
     }
+    console.log('✅ Sign in successful');
   };
 
   const signUp = async (
@@ -163,6 +313,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstName: string,
     lastName: string
   ) => {
+    console.log('📝 Attempting sign up for:', email);
+    
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -175,9 +327,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase.auth.signUp({ email, password });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Sign up error:', error);
+      throw error;
+    }
     
     if (data.user) {
+      console.log('✅ Sign up successful, creating user profile');
       const { error: profileError } = await supabase.from('users').insert([
         {
           id: data.user.id,
@@ -190,11 +346,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       ]);
       
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('❌ Profile creation error:', profileError);
+        throw profileError;
+      }
     }
   };
 
   const signInWithGoogle = async () => {
+    console.log('🔍 Initiating Google OAuth');
+    
     // Get the current URL to determine the correct redirect
     const currentUrl = window.location.origin;
     
@@ -206,6 +367,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       redirectUrl = `http://localhost:${port}`;
     }
     
+    console.log('🎯 OAuth redirect URL:', `${redirectUrl}/onboarding`);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -214,29 +377,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     
     if (error) {
-      console.error('Google OAuth error:', error);
+      console.error('❌ Google OAuth error:', error);
       throw new Error('Failed to sign in with Google. Please try again.');
     }
+    
+    console.log('✅ Google OAuth initiated successfully');
   };
 
   const signOut = async () => {
     try {
+      console.log('👋 Signing out user');
+      
       // Clear all React Query caches to prevent stale data issues
       queryClient.clear();
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Sign out error:', error);
+        throw error;
+      }
       
       // Clear user state
       setUser(null);
+      setSessionCheckAttempts(0);
+      
+      console.log('✅ Sign out successful');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('💥 Error signing out:', error);
       throw error;
     }
   };
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
+    console.log('🔄 Updating user role:', { userId, newRole });
+    
     let updateData: any = { role: newRole };
 
     // Generate default landlord ID for agents
@@ -252,10 +427,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Role update error:', error);
+      throw error;
+    }
 
     if (data) {
-      setUser({
+      console.log('✅ Role updated successfully');
+      const updatedUser = {
         id: data.id,
         email: data.email,
         role: data.role,
@@ -266,7 +445,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: data.created_at,
         verified: data.verified,
         defaultLandlordId: data.default_landlord_id
-      });
+      };
+      
+      setUser(updatedUser);
     }
   };
 
