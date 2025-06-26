@@ -55,12 +55,15 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
     requiredRole 
   });
   
-  // Show loading spinner while checking authentication
+  // CRITICAL: Show loading spinner while checking authentication - prevent any redirects
   if (loading) {
-    console.log('⏳ ProtectedRoute: Still loading, showing spinner');
+    console.log('⏳ ProtectedRoute: Still loading, showing spinner and preventing redirects');
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+          <p className="text-sm text-text-secondary">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -102,12 +105,15 @@ function App() {
 
   console.log('🚀 App render:', { loading, hasUser: !!user, userRole: user?.role });
 
-  // Show loading screen while initializing auth
+  // CRITICAL: Show loading screen while initializing auth - prevent any routing
   if (loading) {
-    console.log('⏳ App: Still loading auth, showing spinner');
+    console.log('⏳ App: Still loading auth, showing spinner and preventing routing');
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+          <p className="text-sm text-text-secondary">Initializing BAABA.ng...</p>
+        </div>
       </div>
     );
   }

@@ -13,12 +13,15 @@ const AuthLayout: React.FC = () => {
     pathname: location.pathname 
   });
 
-  // Show loading spinner while checking authentication
+  // Show loading spinner while checking authentication - CRITICAL: Wait for loading to complete
   if (loading) {
-    console.log('⏳ AuthLayout: Still loading, showing spinner');
+    console.log('⏳ AuthLayout: Still loading, showing spinner and preventing redirects');
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-r-transparent"></div>
+          <p className="text-sm text-text-secondary">Checking authentication...</p>
+        </div>
       </div>
     );
   }

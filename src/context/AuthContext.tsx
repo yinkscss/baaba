@@ -172,6 +172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleUserSession = async (session: any) => {
     try {
       console.log('🔍 Handling user session for:', session.user.id);
+      console.log('📊 Session details:', {
+        userId: session.user.id,
+        email: session.user.email,
+        userMetadata: session.user.user_metadata,
+        appMetadata: session.user.app_metadata
+      });
       
       // First, try to get existing user data
       const { data: userData, error: userError } = await supabase
@@ -201,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           defaultLandlordId: userData.default_landlord_id
         };
         
+        console.log('👤 Setting user object:', userObj);
         setUser(userObj);
         
         // Handle post-authentication redirects
@@ -214,6 +221,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const nameParts = fullName.split(' ');
         const firstName = nameParts[0] || userMetadata.given_name || '';
         const lastName = nameParts.slice(1).join(' ') || userMetadata.family_name || '';
+
+        console.log('📝 Creating user with metadata:', {
+          firstName,
+          lastName,
+          email: session.user.email,
+          profileImage: userMetadata.avatar_url || userMetadata.picture
+        });
 
         const newUserData = {
           id: session.user.id,
@@ -252,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             defaultLandlordId: createdUser.default_landlord_id
           };
           
+          console.log('👤 Setting new user object:', userObj);
           setUser(userObj);
           
           // Handle post-authentication redirects
@@ -265,10 +280,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handlePostAuthRedirect = (userObj: User) => {
-    // Only handle redirects if we're currently on auth-related pages
+    // Only handle redirects if we're currently on auth-related pages or homepage
     const currentPath = window.location.pathname;
     const isAuthPage = currentPath === '/login' || currentPath === '/register' || currentPath === '/';
     
+    console.log('🎯 Post-auth redirect check:', { 
+      currentPath, 
+      isAuthPage, 
+      userRole: userObj.role 
+    });
+
     if (!isAuthPage) {
       console.log('🚫 Not on auth page, skipping redirect');
       return;
@@ -359,20 +380,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get the current URL to determine the correct redirect
     const currentUrl = window.location.origin;
     
-    // For development, ensure we use the correct port
-    let redirectUrl = currentUrl;
-    if (currentUrl.includes('localhost')) {
-      // Extract the port from the current URL
-      const port = window.location.port || '5173';
-      redirectUrl = `http://localhost:${port}`;
-    }
+    // Construct the redirect URL explicitly
+    const redirectUrl = `${currentUrl}/onboarding`;
     
-    console.log('🎯 OAuth redirect URL:', `${redirectUrl}/onboarding`);
+    console.log('🎯 OAuth redirect URL:', redirectUrl);
+    console.log('🌐 Current environment:', {
+      origin: window.location.origin,
+      hostname: window.location.hostname,
+      port: window.location.port,
+      protocol: window.location.protocol
+    });
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${redirectUrl}/onboarding`
+        redirectTo: redirectUrl
       }
     });
     
