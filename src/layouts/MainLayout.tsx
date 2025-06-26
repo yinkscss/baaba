@@ -26,19 +26,21 @@ const MainLayout: React.FC = () => {
     <div className={`flex min-h-screen flex-col bg-background text-text-primary ${
       isRoommatePage ? 'bg-black' : ''
     }`}>
-      {/* Desktop Header */}
-      <header className="hidden md:flex items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center">
-          <img 
-            src="/BAABA NAME copy.png" 
-            alt="BAABA.ng" 
-            className="h-6 w-auto"
-          />
-        </Link>
-        
-        <NavBar items={navItems} isFixed={true} className="mx-auto" />
-        
-        <StickySignIn isFixed={false} />
+      {/* Desktop Header - Fixed and Transparent */}
+      <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 w-full bg-transparent">
+        <div className="container mx-auto flex items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/BAABA NAME copy.png" 
+              alt="BAABA.ng" 
+              className="h-6 w-auto"
+            />
+          </Link>
+          
+          <NavBar items={navItems} isFixed={false} className="mx-auto" />
+          
+          <StickySignIn isFixed={false} />
+        </div>
       </header>
 
       {/* Mobile Navigation */}
